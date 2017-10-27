@@ -24,7 +24,7 @@ Out of 10,000+ users, a mere total of 3 have ever emailed me claiming to have be
 
 - If you are getting the `System.ArgumentException Font` error, please download [MissingFonts.zip](https://github.com/AgentRev/CoD-FoV-Changers/raw/master/MissingFonts.zip), and extract the files in `C:\Windows\Fonts` (if asked to replace current files, choose yes).
 
-- I don't have FoV Changers for Mac, I don't even have a Mac.
+- No, I don't have FoV Changers for Mac. I don't even have a Mac.
 
 ---
 
