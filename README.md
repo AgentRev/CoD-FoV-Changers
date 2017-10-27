@@ -10,7 +10,7 @@ Source code is not included at the moment, but I may add it later if requested.
  - MW3: VAC-safe
  - Ghosts: UNSAFE, USE AT YOUR OWN RISK
 
-Out of 10,000+ users, a mere total of 3 have alleged to have been "banned".
+Out of 10,000+ users, a mere total of 3 have ever emailed me claiming to have been "banned"
 
 ---
 
