@@ -31,3 +31,6 @@ Out of 10,000+ users, a mere total of 3 have ever emailed me claiming to have be
 ---
 
 This project is licensed under the [GNU GPL v3](http://tldrlegal.com/l/gpl-3.0). Copyright © 2017 AgentRev
+
+ACTIVISION, CALL OF DUTY, MODERN WARFARE, and CALL OF DUTY GHOSTS are trademarks of Activision Publishing, Inc.
+No copyright infringement intended.
