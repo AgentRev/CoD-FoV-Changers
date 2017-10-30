@@ -20,9 +20,9 @@ Out of 10,000+ users, a mere total of 3 have ever emailed me claiming to have be
 
 - If you are getting the `System.NullReferenceException` error, simply install Steam you dirty peasant.
 
-- If the FoV Changer has stopped working with [Problem Event Name CLR20r3](https://i.imgur.com/7heWwTW.png), you must [install .NET Framework 3.5](https://www.techhit.com/how-to/install-.net-3.5.1/windows7/).
+- If the FoV Changer has stopped working with [Problem Event Name CLR20r3](https://i.imgur.com/7heWwTW.png), you must [install .NET Framework 3.5](https://www.techhit.com/how-to/install-.net-3.5.1/windows7/)
 
-- If you are getting the `System.ArgumentException Font` error, please download [MissingFonts.zip](https://github.com/AgentRev/CoD-FoV-Changers/raw/master/MissingFonts.zip), and extract the files in `C:\Windows\Fonts` (if asked to replace current files, choose yes).
+- If you are getting the `System.ArgumentException Font` error, please download [MissingFonts.zip](https://github.com/AgentRev/CoD-FoV-Changers/raw/master/MissingFonts.zip), and extract the files in `C:\Windows\Fonts` (if asked to replace current files, choose yes)
 
 - No, I don't have FoV Changers for Mac. I don't even have a Mac.
 
