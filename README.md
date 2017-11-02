@@ -20,7 +20,7 @@ Out of 10,000+ users, a mere total of 3 have ever emailed me claiming to have be
 
 - If you are having issues getting the FoV Changer to work, try waiting until the map is loaded before starting the Changer.
 
-- If you are getting the `System.NullReferenceException` error, simply install Steam you dirty peasant.
+- If you are getting the `System.NullReferenceException IsGameInstalled` error, simply install Steam you dirty peasant.
 
 - If the FoV Changer has stopped working with [Problem Event Name CLR20r3](https://i.imgur.com/7heWwTW.png), you must [install .NET Framework 3.5](https://www.techhit.com/how-to/install-.net-3.5.1/windows7/)
 
