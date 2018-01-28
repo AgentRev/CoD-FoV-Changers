@@ -1,8 +1,12 @@
 # CoD FoV Changers
 
-This repository contains the executables of the FoV Changers I made for Call of Duty MW2, MW3, and Ghosts. I am no longer developing them, however if they get broken by a game update, file a new issue and I'll see what I can do.
+### [DOWNLOAD HERE](https://github.com/AgentRev/CoD-FoV-Changers/releases)
 
-Source code is not included at the moment, but I may add it later if requested. There is no MW2 SP version, you can find one here: https://github.com/marvinlehmann/CoD-SCZ-FoV-Changer/releases
+This repository contains the source code and executables of the FoV Changers I made for Call of Duty MW2, MW3, and Ghosts. I am no longer developing them, however if they get broken by a game update, file a new issue and I'll see what I can do.
+
+I wrote most of the code, the rest being copy-pasted snippets from MPGH.net and Stack Overflow.
+
+There is no MW2 SP version, you can find one here: https://github.com/marvinlehmann/CoD-SCZ-FoV-Changer/releases
 
 ---
 
@@ -16,7 +20,7 @@ Out of 10,000+ users, a mere total of 3 have ever emailed me claiming to have be
 
 ---
 
-### Error fixes
+### FAQ
 
 - If you are having issues getting the FoV Changer to work, try waiting until the map is loaded before starting the Changer.
 
@@ -30,7 +34,7 @@ Out of 10,000+ users, a mere total of 3 have ever emailed me claiming to have be
 
 ---
 
-This project is licensed under the [GNU GPL v3](http://tldrlegal.com/l/gpl-3.0). Copyright © 2017 AgentRev
+This project is licensed under the [GNU GPL v3](http://tldrlegal.com/l/gpl-3.0). Copyright © 2011 - 2018 AgentRev
 
 CALL OF DUTY, MODERN WARFARE, and CALL OF DUTY GHOSTS are trademarks of Activision Publishing, Inc.<br/>
 No copyright infringement intended.
