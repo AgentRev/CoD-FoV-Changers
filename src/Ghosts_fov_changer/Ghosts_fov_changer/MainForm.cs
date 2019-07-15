@@ -43,7 +43,7 @@ namespace Ghosts_FoV_Changer
     {
         #region constants
 
-        public const string c_toolVer = "3.3.3.0";
+        public const string c_toolVer = "3.15.2.0";
 
         public const float c_FoV = 65f;
         public const float c_FoV_lowerLimit = 65f;
@@ -1056,8 +1056,8 @@ namespace Ghosts_FoV_Changer
                 {
                     this.Invoke(new Action(() =>
                     {
-                        DialogResult vacResult = MessageBox.Show(this, "It has been reported that this FoV Changer may cause Valve Anti-Cheat to trigger a ban. " +
-                                                                       "For any information, please check MapModNews.com\n\n" +
+                        DialogResult vacResult = MessageBox.Show(this, "It has been reported that this FoV Changer may cause anti-cheat software to trigger a ban. " +
+                                                                       "For any information, please check github.com/AgentRev/CoD-FoV-Changers\n\n" +
                                                                        "Click 'OK' to exit the program, or 'Cancel' to continue using it AT YOUR OWN RISK.",
                                                                        "Detection alert", MessageBoxButtons.OKCancel, MessageBoxIcon.Error);
 
@@ -1249,7 +1249,7 @@ namespace Ghosts_FoV_Changer
 
         private void lblLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            Process.Start("http://www.mapmodnews.com/");
+            Process.Start("https://github.com/AgentRev/CoD-FoV-Changers");
         }
 
         private void chkHotkeys_CheckedChanged(object sender, EventArgs e)

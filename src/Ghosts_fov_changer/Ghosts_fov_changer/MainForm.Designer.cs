@@ -51,7 +51,6 @@ namespace Ghosts_FoV_Changer
             this.btnReset = new System.Windows.Forms.Button();
             this.lblVersion = new System.Windows.Forms.Label();
             this.lblInstructions = new System.Windows.Forms.Label();
-            this.lblMMN = new System.Windows.Forms.Label();
             this.lblLink = new System.Windows.Forms.LinkLabel();
             this.TimerHTTP = new System.Windows.Forms.Timer(this.components);
             this.chkUpdate = new System.Windows.Forms.CheckBox();
@@ -215,32 +214,21 @@ namespace Ghosts_FoV_Changer
             this.lblInstructions.TabIndex = 8;
             this.lblInstructions.Text = "Zoom out (+1)";
             // 
-            // lblMMN
-            // 
-            this.lblMMN.AutoSize = true;
-            this.lblMMN.Location = new System.Drawing.Point(8, 323);
-            this.lblMMN.MinimumSize = new System.Drawing.Size(242, 0);
-            this.lblMMN.Name = "lblMMN";
-            this.lblMMN.Size = new System.Drawing.Size(242, 26);
-            this.lblMMN.TabIndex = 9;
-            this.lblMMN.Text = "Check MapModNews.com  for updates,\nas well as fixes and patchnotes for CoD:Ghosts" +
-    "";
-            this.lblMMN.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
             // lblLink
             // 
             this.lblLink.AutoSize = true;
             this.lblLink.BackColor = System.Drawing.SystemColors.Control;
             this.lblLink.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblLink.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
-            this.lblLink.Location = new System.Drawing.Point(65, 323);
+            this.lblLink.Location = new System.Drawing.Point(21, 332);
             this.lblLink.Margin = new System.Windows.Forms.Padding(0);
-            this.lblLink.MaximumSize = new System.Drawing.Size(99, 0);
+            this.lblLink.MaximumSize = new System.Drawing.Size(260, 0);
             this.lblLink.Name = "lblLink";
-            this.lblLink.Size = new System.Drawing.Size(99, 13);
+            this.lblLink.Size = new System.Drawing.Size(208, 13);
             this.lblLink.TabIndex = 18;
             this.lblLink.TabStop = true;
-            this.lblLink.Text = "MapModNews.com";
+            this.lblLink.Text = "github.com/AgentRev/CoD-FoV-Changers";
+            this.lblLink.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             this.lblLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lblLink_LinkClicked);
             // 
             // chkUpdate
@@ -409,7 +397,6 @@ namespace Ghosts_FoV_Changer
             this.Controls.Add(this.lblUpdateAvail);
             this.Controls.Add(this.chkUpdate);
             this.Controls.Add(this.lblLink);
-            this.Controls.Add(this.lblMMN);
             this.Controls.Add(this.lblInstructions);
             this.Controls.Add(this.lblVersion);
             this.Controls.Add(this.btnReset);
@@ -451,7 +438,6 @@ namespace Ghosts_FoV_Changer
         private System.Windows.Forms.Button btnReset;
         private System.Windows.Forms.Label lblVersion;
         private System.Windows.Forms.Label lblInstructions;
-        private System.Windows.Forms.Label lblMMN;
         private System.Windows.Forms.LinkLabel lblLink;
         private System.Windows.Forms.Timer TimerHTTP;
         private System.Windows.Forms.CheckBox chkUpdate;

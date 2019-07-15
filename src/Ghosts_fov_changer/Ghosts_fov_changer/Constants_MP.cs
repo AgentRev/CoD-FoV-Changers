@@ -25,8 +25,8 @@ namespace Ghosts_FoV_Changer
         
         public const string c_cVar = "cg_fov";
         public const dword_ptr c_memSearchRange = 0x90000000;
-        public const dword_ptr c_baseAddr = 0x0140500000;
-        public const dword_ptr c_pFoV = 0x014767A320;
+        public const dword_ptr c_baseAddr = 0x0140800000;
+        public const dword_ptr c_pFoV = 0x0147912FF0;
         public const byte c_checkRange = 0x40;
     }
 }
