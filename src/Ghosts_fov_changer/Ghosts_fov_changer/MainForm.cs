@@ -43,7 +43,7 @@ namespace Ghosts_FoV_Changer
     {
         #region constants
 
-        public const string c_toolVer = "3.15.2.0";
+        public const string c_toolVer = "3.15.2.1";
 
         public const float c_FoV = 65f;
         public const float c_FoV_lowerLimit = 65f;
@@ -954,7 +954,7 @@ namespace Ghosts_FoV_Changer
                             mem.FindFoVOffset(ref pFoV, ref step);
 
                             if (!isOffsetWrong(pFoV)) progStart();
-                            else if (proc.PagedMemorySize64 > (dword_ptr)gameMode.GetValue("c_memSearchRange"))
+                            else if (proc.WorkingSet64 > (dword_ptr)gameMode.GetValue("c_memSearchRange"))
                             {
                                 TimerVerif.Stop();
                                 TimerCheck.Stop();
