@@ -23,10 +23,10 @@ namespace Ghosts_FoV_Changer
         public const string c_errorMessage = "An unexpected error occured while trying to start the game." + c_manualMessage;
         public const string c_notFoundMessage = "The game cannot be found." + c_manualMessage;
         
-        public const string c_cVar = "cg_fov";
+        public const string c_cVar = "cg_fovScale";
         public const dword_ptr c_memSearchRange = 0x90000000;
         public const dword_ptr c_baseAddr = 0x0140000000;
-        public const dword_ptr c_pFoV = 0x014783EBD0;
+        public const dword_ptr c_pFoV = 0x0147867190;
         public const byte c_checkRange = 0x40;
     }
 }

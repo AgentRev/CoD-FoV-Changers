@@ -168,11 +168,13 @@ namespace Ghosts_FoV_Changer
                 CloseHandle(hProc);
             }
 
-            return BitConverter.ToSingle(buffer, 0);
+            return BitConverter.ToSingle(buffer, 0)
+                * MainForm.c_FoV; // cg_fovScale
         }
 
         public void WriteFloat(dword_ptr ptr, float val)
         {
+            val /= MainForm.c_FoV; // cg_fovScale
             IntPtr hProc;
 
             try { hProc = OpenProcess(WRITE, false, pid); }
