@@ -36,7 +36,7 @@ namespace Ghosts_FoV_Changer
         const int READ = 0x10; // PROCESS_VM_READ
         const int WRITE = 0x28; // PROCESS_VM_OPERATION | PROCESS_VM_WRITE
 
-        const int searchTextRegion = 0x600000;
+        const int searchTextRegion = 0xA00000;
         const int searchRegion = 0xC00000;
         const int searchRegionBefore = 0x400000;
 
