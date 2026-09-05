@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -108,8 +108,6 @@ namespace Ghosts_FoV_Changer
         private static extern IntPtr GetModuleHandle(string name);
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         private static extern short GetAsyncKeyState(Keys key);
-        [DllImport("kernel32", CharSet = CharSet.Unicode, SetLastError = true)]
-        private static extern IntPtr LoadLibrary(string librayName);
         private LowLevelKeyboardProc objKeyboardProcess;
         private IntPtr ptrHook;
         private KeyHook theKey;
@@ -119,22 +117,8 @@ namespace Ghosts_FoV_Changer
         private Process proc = null;
         private Memory mem = null;
 
-        //public delegate void Action();
-
         SoundPlayer sndGameFound = new SoundPlayer(Assembly.GetExecutingAssembly().GetManifestResourceStream(Assembly.GetExecutingAssembly().GetName().Name + ".Resources.gamefound.wav"));
         SoundPlayer sndGameLost = new SoundPlayer(Assembly.GetExecutingAssembly().GetManifestResourceStream(Assembly.GetExecutingAssembly().GetName().Name + ".Resources.gamelost.wav"));
-
-        /*[DllImport("MW3_fov_lib.dll", EntryPoint = "SetVals", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void SetVals(uint nPid = 0, uint nBaseAddr = 0, byte nCheckRange = 0);
-        [DllImport("MW3_fov_lib.dll", EntryPoint = "ReadFloat", CallingConvention = CallingConvention.Cdecl)]
-        public static extern float ReadFloat(uint ptr);
-        [DllImport("MW3_fov_lib.dll", EntryPoint = "WriteFloat", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void WriteFloat(uint ptr, float val);
-        [DllImport("MW3_fov_lib.dll", EntryPoint = "FindFoVOffset", CallingConvention = CallingConvention.Cdecl)]
-        public static extern bool FindFoVOffset(ref uint pFoV, ref byte step);*/
-
-        //[DllImport("ntdll.dll", EntryPoint = "RtlAdjustPrivilege")]
-        //public static extern long RtlAdjustPrivilege(long privilege, long bEnablePrivilege, long bCurrentThread, long OldState);
 
         bool isRunning(bool init)
         {
@@ -807,7 +791,7 @@ namespace Ghosts_FoV_Changer
             }
         }
 
-        [DllImport("user32.dll")]
+        [DllImport("user32.dll", SetLastError = true)]
         public static extern uint MapVirtualKey(uint uCode, uint uMapType);
 
         public static string VirtualKeyName(Keys theKey)

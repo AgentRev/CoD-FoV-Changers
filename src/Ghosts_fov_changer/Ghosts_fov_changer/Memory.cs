@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -16,28 +16,29 @@ namespace Ghosts_FoV_Changer
         #region DLLImports
 
         [DllImport("kernel32.dll")]
-        public static extern IntPtr OpenProcess(int dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, int dwProcessId);
+        public static extern IntPtr OpenProcess(uint dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, int dwProcessId);
         [DllImport("kernel32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool CloseHandle(IntPtr hObject);
         [DllImport("kernel32.dll")]
-        public static extern bool ReadProcessMemory(IntPtr hProc, dword_ptr lpBaseAddress, [Out] byte[] buffer, int size, [Out] int lpNumberOfBytesRead);
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool ReadProcessMemory(IntPtr hProc, dword_ptr lpBaseAddress, [Out] byte[] lpBuffer, int nSize, [Out] int lpNumberOfBytesRead);
         [DllImport("kernel32.dll")]
-        public static extern bool ReadProcessMemory(IntPtr hProc, dword_ptr lpBaseAddress, out dword_ptr buffer, int size, [Out] int lpNumberOfBytesRead);
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool ReadProcessMemory(IntPtr hProc, dword_ptr lpBaseAddress, out dword_ptr lpBuffer, int nSize, [Out] int lpNumberOfBytesRead);
         [DllImport("kernel32.dll")]
-        public static extern bool WriteProcessMemory(IntPtr hProc, dword_ptr lpBaseAddress, [In] byte[] buffer, int size, [Out] int lpNumberOfBytesWritten);
-        [DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern unsafe int strcmp(byte* b1, byte[] b2);
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool WriteProcessMemory(IntPtr hProc, dword_ptr lpBaseAddress, [In] byte[] lpBuffer, int nSize, [Out] int lpNumberOfBytesWritten);
 
         #endregion
 
         #region Constants
 
-        const int READ = 0x10; // PROCESS_VM_READ
-        const int WRITE = 0x28; // PROCESS_VM_OPERATION | PROCESS_VM_WRITE
+        const uint READ = 0x0410; // PROCESS_VM_READ | PROCESS_QUERY_INFORMATION
+        const uint WRITE = 0x0038; // PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ
 
-        const int searchTextRegion = 0xA00000;
-        const int searchRegion = 0xC00000;
+        const int searchTextRegion = 0x2000000;
+        const int searchRegion = 0x10000000;
         const int searchRegionBefore = 0x400000;
 
         #endregion
@@ -82,23 +83,28 @@ namespace Ghosts_FoV_Changer
                     byte[] buffer = new byte[searchTextRegion];
 
                     try { ReadProcessMemory(hProc, baseAddr, buffer, searchTextRegion, 0); }
-                    catch (Exception e) { step = 3; throw new Exception(String.Format("Failed to read process memory during the first iteration of a FindFoVOffset statement\nWin32 Error: {1}", e.Message)); }
+                    catch (Exception e) { step = 3; throw new Exception(String.Format("Failed to read process memory during the first iteration of a FindFoVOffset statement\nWin32 Error: {0}", e.Message)); }
 
-                    unsafe
+                    step = 4;
+                    int maxOffset = searchTextRegion - cVar.Length;
+
+                    for (int i = 0; i < maxOffset; i += sizeof(Int32))
                     {
-                        fixed (byte* pBuffer = buffer)
+                        bool match = true;
+                        for (int j = 0; j < cVar.Length; j++)
                         {
-                            for (int i = 0; i < searchTextRegion; i += sizeof(Int32))
+                            if (buffer[i + j] != cVar[j])
                             {
-                                step = 4;
-
-                                if (strcmp(pBuffer + i, cVar) == 0)
-                                {
-                                    step = 5;
-                                    varAddr = baseAddr + i;
-                                    break;
-                                }
+                                match = false;
+                                break;
                             }
+                        }
+
+                        if (match)
+                        {
+                            step = 5;
+                            varAddr = baseAddr + i;
+                            break;
                         }
                     }
                 }
@@ -125,22 +131,18 @@ namespace Ghosts_FoV_Changer
 
                         step = 9;
 
-                        unsafe
+                        for (int i = 0; i < searchRegion - sizeof(dword_ptr); i += sizeof(Int32))
                         {
-                            fixed (byte* pBuffer = buffer)
+#if WIN64
+                            if (BitConverter.ToInt64(buffer, i) == varAddr)
+#else
+                            if (BitConverter.ToInt32(buffer, i) == varAddr)
+#endif
                             {
-                                for (int i = 0; i < searchRegion; i += sizeof(Int32))
-                                {
-                                    step = 10;
-
-                                    if (*(dword_ptr*)(pBuffer + i) == varAddr)
-                                    {
-                                        step = 11;
-                                        pFoV += i - searchRegionBefore + pOffset;
-                                        isFound = true;
-                                        break;
-                                    }
-                                }
+                                step = 10;
+                                pFoV += i - searchRegionBefore + pOffset;
+                                isFound = true;
+                                break;
                             }
                         }
                     }

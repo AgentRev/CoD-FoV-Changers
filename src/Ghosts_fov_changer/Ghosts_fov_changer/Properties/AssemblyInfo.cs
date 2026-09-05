@@ -1,16 +1,16 @@
-﻿using System.Reflection;
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 // Les informations générales relatives à un assembly dépendent de 
 // l'ensemble d'attributs suivant. Changez les valeurs de ces attributs pour modifier les informations
 // associées à un assembly.
 [assembly: AssemblyTitle("Ghosts FoV Changer")]
-[assembly: AssemblyDescription("Prevents headaches and motion sickness")]
+[assembly: AssemblyDescription("Field of View Changer for Call of Duty: Ghosts")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("AgentRev")]
 [assembly: AssemblyProduct("Ghosts FoV Changer")]
-[assembly: AssemblyCopyright("Copyright © AgentRev 2013")]
-[assembly: AssemblyTrademark("")]
+[assembly: AssemblyCopyright("Copyright © AgentRev 2013-2026")]
+[assembly: AssemblyTrademark("AgentRev")]
 [assembly: AssemblyCulture("")]
 
 // L'affectation de la valeur false à ComVisible rend les types invisibles dans cet assembly 

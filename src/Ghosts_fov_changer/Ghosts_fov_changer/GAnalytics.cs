@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -12,10 +12,16 @@ namespace Ghosts_FoV_Changer
     public static class GAnalytics
     {
         public static string trackingID = "UA-xxxxxxxx-x";
-        public static string ipService = "http://ipecho.net/plain";
+        public static string ipService = "https://api.ipify.org";
 
         public static void TriggerAnalytics(string pagename, bool firstTime)
         {
+            try
+            {
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+            }
+            catch { }
+
             string commentForCodeLurkers = "This is to trigger a visit on Google Analytics";
 
             Random rnd = new Random();
@@ -38,7 +44,7 @@ namespace Ghosts_FoV_Changer
             string culture = Thread.CurrentThread.CurrentCulture.Name;
             string screenRes = Screen.PrimaryScreen.Bounds.Width + "x" + Screen.PrimaryScreen.Bounds.Height;
 
-            string statsRequest = "http://www.google-analytics.com/__utm.gif" +
+            string statsRequest = "https://www.google-analytics.com/__utm.gif" +
                 "?utmwv=4.6.5" +
                 "&utmn=" + rnd.Next(100000000, 999999999) +
                 //  "&utmhn=hostname.mydomain.com" +
