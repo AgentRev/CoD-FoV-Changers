@@ -112,19 +112,21 @@ namespace Ghosts_FoV_Changer
         {
             if (proc != null)
             {
-                proc.Refresh();
-                if (proc.HasExited)
+                try
                 {
-                    if (init)
+                    proc.Refresh();
+                    if (proc.HasExited)
                     {
-                        TimerVerif.Stop();
-                        mem = null;
                         progStop();
+                        return false;
                     }
-                    proc = null;
+                    return true;
+                }
+                catch
+                {
+                    progStop();
                     return false;
                 }
-                return true;
             }
 
             foreach (string exe in Constants.c_exes)
@@ -138,7 +140,7 @@ namespace Ghosts_FoV_Changer
 
                         try
                         {
-                            mem = new Memory(Constants.c_cVar, proc.Id, Constants.c_baseAddr, Constants.c_checkRange, c_pOffset);
+                            mem = new Memory(Constants.c_cVar, proc.Id, Constants.c_baseAddr, Constants.c_memReadRange, c_pOffset);
                         }
                         catch (Exception ex)
                         {
@@ -191,7 +193,7 @@ namespace Ghosts_FoV_Changer
             InitializeComponent();
 
 #if ESL
-            this.Text = "ESL Ghosts FoV Changer";
+            this.Text = "ESL MultiCoD FoV Changer";
 #endif
 
             saveSettings = false;
@@ -422,18 +424,17 @@ namespace Ghosts_FoV_Changer
 
         private void progStop()
         {
-            SetFoV(-1);
-
-            if (proc != null && isRunning(false) && writeAllowed)
-                mem = null;
-
-            proc = null;
+            TimerVerif.Stop();
+            TimerUpdate.Stop();
 
             if (writeAllowed && doBeep)
                 sndGameLost.PlaySync();
 
             writeAllowed = false;
-            TimerUpdate.Stop();
+            mem = null;
+            proc = null;
+
+            SetFoV(-1);
         }
 
         private long VersionNum(string data)

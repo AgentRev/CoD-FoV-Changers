@@ -37,16 +37,12 @@ namespace Ghosts_FoV_Changer
         const uint READ = 0x0410; // PROCESS_VM_READ | PROCESS_QUERY_INFORMATION
         const uint WRITE = 0x0038; // PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ
 
-        const int searchTextRegion = 0x2000000;
-        const int searchRegion = 0x10000000;
-        const int searchRegionBefore = 0x400000;
-
         #endregion
 
         #region Variables
 
         byte pOffset;
-        byte searchRange;
+        dword_ptr memReadRange;
         int pid;
         dword_ptr baseAddr;
         dword_ptr varAddr;
@@ -54,12 +50,12 @@ namespace Ghosts_FoV_Changer
 
         #endregion
 
-        public Memory(string cVar, int pid, dword_ptr baseAddr, byte searchRange, byte pOffset)
+        public Memory(string cVar, int pid, dword_ptr baseAddr, dword_ptr memReadRange, byte pOffset)
         {
             this.cVar = Encoding.ASCII.GetBytes(cVar + '\0');
             this.pid = pid;
             this.baseAddr = baseAddr;
-            this.searchRange = searchRange;
+            this.memReadRange = memReadRange;
             this.pOffset = pOffset;
         }
 
@@ -75,18 +71,16 @@ namespace Ghosts_FoV_Changer
 
             if (hProc != IntPtr.Zero)
             {
-                dword_ptr start = pFoV - searchRegionBefore;
+                step = 2;
+                byte[] buffer = new byte[memReadRange];
+
+                try { ReadProcessMemory(hProc, baseAddr, buffer, (int)memReadRange, 0); }
+                catch (Exception e) { step = 3; throw new Exception(String.Format("Failed to read process memory during a FindFoVOffset statement\nWin32 Error: {0}", e.Message)); }
 
                 if (varAddr == 0)
                 {
-                    step = 2;
-                    byte[] buffer = new byte[searchTextRegion];
-
-                    try { ReadProcessMemory(hProc, baseAddr, buffer, searchTextRegion, 0); }
-                    catch (Exception e) { step = 3; throw new Exception(String.Format("Failed to read process memory during the first iteration of a FindFoVOffset statement\nWin32 Error: {0}", e.Message)); }
-
                     step = 4;
-                    int maxOffset = searchTextRegion - cVar.Length;
+                    int maxOffset = buffer.Length - cVar.Length;
 
                     for (int i = 0; i < maxOffset; i += sizeof(Int32))
                     {
@@ -111,10 +105,18 @@ namespace Ghosts_FoV_Changer
 
                 if (varAddr > 0)
                 {
-                    dword_ptr testCurrentPtr;
+                    int testIndex = (int)(pFoV - pOffset - baseAddr);
+                    dword_ptr testCurrentPtr = 0;
 
-                    try { ReadProcessMemory(hProc, pFoV - pOffset, out testCurrentPtr, sizeof(dword_ptr), 0); step = 14; }
-                    catch (Exception e) { step = 1; throw new Exception(String.Format("Failed to read process memory during the test FindFoVOffset statement; \nWin32 Error: {0}", e.Message)); }
+                    if (testIndex >= 0 && testIndex <= buffer.Length - sizeof(dword_ptr))
+                    {
+                        step = 14;
+#if WIN64
+                        testCurrentPtr = BitConverter.ToInt64(buffer, testIndex);
+#else
+                        testCurrentPtr = BitConverter.ToInt32(buffer, testIndex);
+#endif
+                    }
 
                     if (testCurrentPtr == varAddr)
                     {
@@ -123,15 +125,11 @@ namespace Ghosts_FoV_Changer
                     }
                     else
                     {
-                        step = 6;
-                        byte[] buffer = new byte[searchRegion];
-
-                        try { ReadProcessMemory(hProc, start, buffer, searchRegion, 0); step = 7; }
-                        catch (Exception e) { step = 8; throw new Exception(String.Format("Failed to read process memory during the second iteration of a FindFoVOffset statement; Address = {0:X}\nWin32 Error: {1}", start, e.Message)); }
-
                         step = 9;
+                        int startIndex = (int)(varAddr - baseAddr);
+                        int maxIndex = buffer.Length - sizeof(dword_ptr);
 
-                        for (int i = 0; i < searchRegion - sizeof(dword_ptr); i += sizeof(Int32))
+                        for (int i = startIndex; i <= maxIndex; i += sizeof(Int32))
                         {
 #if WIN64
                             if (BitConverter.ToInt64(buffer, i) == varAddr)
@@ -140,7 +138,7 @@ namespace Ghosts_FoV_Changer
 #endif
                             {
                                 step = 10;
-                                pFoV += i - searchRegionBefore + pOffset;
+                                pFoV = baseAddr + i + pOffset;
                                 isFound = true;
                                 break;
                             }

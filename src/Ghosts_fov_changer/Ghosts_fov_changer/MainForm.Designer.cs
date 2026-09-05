@@ -81,7 +81,7 @@ namespace Ghosts_FoV_Changer
             // 
             this.lblFoV.AutoSize = true;
             this.lblFoV.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblFoV.Location = new System.Drawing.Point(45, 138);
+            this.lblFoV.Location = new System.Drawing.Point(63, 60);
             this.lblFoV.Name = "lblFoV";
             this.lblFoV.Size = new System.Drawing.Size(99, 20);
             this.lblFoV.TabIndex = 0;
@@ -98,7 +98,7 @@ namespace Ghosts_FoV_Changer
             this.chkBeep.Checked = true;
             this.chkBeep.CheckState = System.Windows.Forms.CheckState.Checked;
             this.chkBeep.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.chkBeep.Location = new System.Drawing.Point(116, 189);
+            this.chkBeep.Location = new System.Drawing.Point(134, 111);
             this.chkBeep.Name = "chkBeep";
             this.chkBeep.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
             this.chkBeep.Size = new System.Drawing.Size(130, 20);
@@ -109,6 +109,7 @@ namespace Ghosts_FoV_Changer
             // 
             // TimerVerif
             // 
+            this.TimerVerif.Interval = 3000;
             this.TimerVerif.Tick += new System.EventHandler(this.TimerVerif_Tick);
             // 
             // numFoV
@@ -117,7 +118,7 @@ namespace Ghosts_FoV_Changer
             this.numFoV.DecimalPlaces = 2;
             this.numFoV.Enabled = false;
             this.numFoV.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.numFoV.Location = new System.Drawing.Point(153, 139);
+            this.numFoV.Location = new System.Drawing.Point(171, 61);
             this.numFoV.Maximum = new decimal(new int[] {
             90,
             0,
@@ -142,7 +143,7 @@ namespace Ghosts_FoV_Changer
             // btnExit
             // 
             this.btnExit.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnExit.Location = new System.Drawing.Point(177, 358);
+            this.btnExit.Location = new System.Drawing.Point(195, 280);
             this.btnExit.Name = "btnExit";
             this.btnExit.Size = new System.Drawing.Size(70, 30);
             this.btnExit.TabIndex = 20;
@@ -153,7 +154,7 @@ namespace Ghosts_FoV_Changer
             // btnAbout
             // 
             this.btnAbout.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnAbout.Location = new System.Drawing.Point(97, 358);
+            this.btnAbout.Location = new System.Drawing.Point(115, 280);
             this.btnAbout.Name = "btnAbout";
             this.btnAbout.Size = new System.Drawing.Size(70, 30);
             this.btnAbout.TabIndex = 19;
@@ -164,7 +165,7 @@ namespace Ghosts_FoV_Changer
             // btnReset
             // 
             this.btnReset.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnReset.Location = new System.Drawing.Point(223, 138);
+            this.btnReset.Location = new System.Drawing.Point(241, 60);
             this.btnReset.Name = "btnReset";
             this.btnReset.Size = new System.Drawing.Size(24, 24);
             this.btnReset.TabIndex = 3;
@@ -178,7 +179,7 @@ namespace Ghosts_FoV_Changer
             this.lblVersion.AutoSize = true;
             this.lblVersion.Enabled = false;
             this.lblVersion.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblVersion.Location = new System.Drawing.Point(8, 365);
+            this.lblVersion.Location = new System.Drawing.Point(26, 287);
             this.lblVersion.MinimumSize = new System.Drawing.Size(82, 0);
             this.lblVersion.Name = "lblVersion";
             this.lblVersion.Size = new System.Drawing.Size(82, 16);
@@ -191,7 +192,7 @@ namespace Ghosts_FoV_Changer
             // 
             this.lblInstructions.AutoSize = true;
             this.lblInstructions.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblInstructions.Location = new System.Drawing.Point(121, 239);
+            this.lblInstructions.Location = new System.Drawing.Point(139, 161);
             this.lblInstructions.Name = "lblInstructions";
             this.lblInstructions.Size = new System.Drawing.Size(88, 16);
             this.lblInstructions.TabIndex = 8;
@@ -203,7 +204,7 @@ namespace Ghosts_FoV_Changer
             this.lblLink.BackColor = System.Drawing.SystemColors.Control;
             this.lblLink.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblLink.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
-            this.lblLink.Location = new System.Drawing.Point(21, 332);
+            this.lblLink.Location = new System.Drawing.Point(39, 254);
             this.lblLink.Margin = new System.Windows.Forms.Padding(0);
             this.lblLink.MaximumSize = new System.Drawing.Size(260, 0);
             this.lblLink.Name = "lblLink";
@@ -220,7 +221,7 @@ namespace Ghosts_FoV_Changer
             this.chkUpdate.Checked = true;
             this.chkUpdate.CheckState = System.Windows.Forms.CheckState.Checked;
             this.chkUpdate.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.chkUpdate.Location = new System.Drawing.Point(48, 210);
+            this.chkUpdate.Location = new System.Drawing.Point(66, 132);
             this.chkUpdate.Name = "chkUpdate";
             this.chkUpdate.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
             this.chkUpdate.Size = new System.Drawing.Size(198, 20);
@@ -236,7 +237,7 @@ namespace Ghosts_FoV_Changer
             this.lblUpdateAvail.Enabled = false;
             this.lblUpdateAvail.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblUpdateAvail.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(180)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.lblUpdateAvail.Location = new System.Drawing.Point(0, 306);
+            this.lblUpdateAvail.Location = new System.Drawing.Point(18, 228);
             this.lblUpdateAvail.Name = "lblUpdateAvail";
             this.lblUpdateAvail.Size = new System.Drawing.Size(258, 13);
             this.lblUpdateAvail.TabIndex = 12;
@@ -253,7 +254,7 @@ namespace Ghosts_FoV_Changer
             // 
             this.btnKeyZoomOut.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnKeyZoomOut.ForeColor = System.Drawing.Color.MidnightBlue;
-            this.btnKeyZoomOut.Location = new System.Drawing.Point(10, 236);
+            this.btnKeyZoomOut.Location = new System.Drawing.Point(28, 158);
             this.btnKeyZoomOut.Name = "btnKeyZoomOut";
             this.btnKeyZoomOut.Size = new System.Drawing.Size(108, 23);
             this.btnKeyZoomOut.TabIndex = 13;
@@ -265,7 +266,7 @@ namespace Ghosts_FoV_Changer
             // 
             this.btnKeyZoomIn.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnKeyZoomIn.ForeColor = System.Drawing.Color.MidnightBlue;
-            this.btnKeyZoomIn.Location = new System.Drawing.Point(10, 258);
+            this.btnKeyZoomIn.Location = new System.Drawing.Point(28, 180);
             this.btnKeyZoomIn.Name = "btnKeyZoomIn";
             this.btnKeyZoomIn.Size = new System.Drawing.Size(108, 23);
             this.btnKeyZoomIn.TabIndex = 14;
@@ -277,7 +278,7 @@ namespace Ghosts_FoV_Changer
             // 
             this.lblZoomIn.AutoSize = true;
             this.lblZoomIn.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblZoomIn.Location = new System.Drawing.Point(121, 261);
+            this.lblZoomIn.Location = new System.Drawing.Point(139, 183);
             this.lblZoomIn.Name = "lblZoomIn";
             this.lblZoomIn.Size = new System.Drawing.Size(80, 16);
             this.lblZoomIn.TabIndex = 15;
@@ -287,7 +288,7 @@ namespace Ghosts_FoV_Changer
             // 
             this.lblResetDefault.AutoSize = true;
             this.lblResetDefault.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblResetDefault.Location = new System.Drawing.Point(121, 283);
+            this.lblResetDefault.Location = new System.Drawing.Point(139, 205);
             this.lblResetDefault.Name = "lblResetDefault";
             this.lblResetDefault.Size = new System.Drawing.Size(125, 16);
             this.lblResetDefault.TabIndex = 16;
@@ -297,7 +298,7 @@ namespace Ghosts_FoV_Changer
             // 
             this.btnKeyReset.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnKeyReset.ForeColor = System.Drawing.Color.MidnightBlue;
-            this.btnKeyReset.Location = new System.Drawing.Point(10, 280);
+            this.btnKeyReset.Location = new System.Drawing.Point(28, 202);
             this.btnKeyReset.Name = "btnKeyReset";
             this.btnKeyReset.Size = new System.Drawing.Size(108, 23);
             this.btnKeyReset.TabIndex = 17;
@@ -309,7 +310,7 @@ namespace Ghosts_FoV_Changer
             // 
             this.chkHotkeys.AutoSize = true;
             this.chkHotkeys.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.chkHotkeys.Location = new System.Drawing.Point(123, 168);
+            this.chkHotkeys.Location = new System.Drawing.Point(141, 90);
             this.chkHotkeys.Name = "chkHotkeys";
             this.chkHotkeys.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
             this.chkHotkeys.Size = new System.Drawing.Size(123, 20);
@@ -321,9 +322,9 @@ namespace Ghosts_FoV_Changer
             // pictureBox1
             // 
             this.pictureBox1.Image = global::Ghosts_FoV_Changer.Properties.Resources.codghosts_banner;
-            this.pictureBox1.Location = new System.Drawing.Point(0, 0);
+            this.pictureBox1.Location = new System.Drawing.Point(18, 0);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(258, 63);
+            this.pictureBox1.Size = new System.Drawing.Size(258, 43);
             this.pictureBox1.TabIndex = 21;
             this.pictureBox1.TabStop = false;
             // 
@@ -331,7 +332,7 @@ namespace Ghosts_FoV_Changer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(258, 399);
+            this.ClientSize = new System.Drawing.Size(294, 327);
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.chkHotkeys);
             this.Controls.Add(this.btnKeyReset);
