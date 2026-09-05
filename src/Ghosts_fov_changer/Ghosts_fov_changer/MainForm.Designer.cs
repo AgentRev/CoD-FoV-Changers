@@ -44,7 +44,6 @@ namespace Ghosts_FoV_Changer
             this.TimerCheck = new System.Windows.Forms.Timer(this.components);
             this.chkBeep = new System.Windows.Forms.CheckBox();
             this.TimerVerif = new System.Windows.Forms.Timer(this.components);
-            this.btnStartGame = new System.Windows.Forms.Button();
             this.numFoV = new System.Windows.Forms.NumericUpDown();
             this.btnExit = new System.Windows.Forms.Button();
             this.btnAbout = new System.Windows.Forms.Button();
@@ -106,7 +105,7 @@ namespace Ghosts_FoV_Changer
             this.chkBeep.Location = new System.Drawing.Point(116, 189);
             this.chkBeep.Name = "chkBeep";
             this.chkBeep.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
-            this.chkBeep.Size = new System.Drawing.Size(131, 20);
+            this.chkBeep.Size = new System.Drawing.Size(130, 20);
             this.chkBeep.TabIndex = 5;
             this.chkBeep.Text = "Beep on success";
             this.chkBeep.UseVisualStyleBackColor = true;
@@ -115,18 +114,6 @@ namespace Ghosts_FoV_Changer
             // TimerVerif
             // 
             this.TimerVerif.Tick += new System.EventHandler(this.TimerVerif_Tick);
-            // 
-            // btnStartGame
-            // 
-            this.btnStartGame.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnStartGame.Location = new System.Drawing.Point(153, 83);
-            this.btnStartGame.MinimumSize = new System.Drawing.Size(82, 24);
-            this.btnStartGame.Name = "btnStartGame";
-            this.btnStartGame.Size = new System.Drawing.Size(93, 31);
-            this.btnStartGame.TabIndex = 1;
-            this.btnStartGame.Text = "Start Game";
-            this.btnStartGame.UseVisualStyleBackColor = true;
-            this.btnStartGame.Click += new System.EventHandler(this.btnStartGame_Click);
             // 
             // numFoV
             // 
@@ -210,7 +197,7 @@ namespace Ghosts_FoV_Changer
             this.lblInstructions.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblInstructions.Location = new System.Drawing.Point(121, 239);
             this.lblInstructions.Name = "lblInstructions";
-            this.lblInstructions.Size = new System.Drawing.Size(89, 16);
+            this.lblInstructions.Size = new System.Drawing.Size(88, 16);
             this.lblInstructions.TabIndex = 8;
             this.lblInstructions.Text = "Zoom out (+1)";
             // 
@@ -240,7 +227,7 @@ namespace Ghosts_FoV_Changer
             this.chkUpdate.Location = new System.Drawing.Point(48, 210);
             this.chkUpdate.Name = "chkUpdate";
             this.chkUpdate.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
-            this.chkUpdate.Size = new System.Drawing.Size(199, 20);
+            this.chkUpdate.Size = new System.Drawing.Size(198, 20);
             this.chkUpdate.TabIndex = 6;
             this.chkUpdate.Text = "Notify when update available";
             this.chkUpdate.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -296,7 +283,7 @@ namespace Ghosts_FoV_Changer
             this.lblZoomIn.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblZoomIn.Location = new System.Drawing.Point(121, 261);
             this.lblZoomIn.Name = "lblZoomIn";
-            this.lblZoomIn.Size = new System.Drawing.Size(81, 16);
+            this.lblZoomIn.Size = new System.Drawing.Size(80, 16);
             this.lblZoomIn.TabIndex = 15;
             this.lblZoomIn.Text = "Zoom in (−1)";
             // 
@@ -306,7 +293,7 @@ namespace Ghosts_FoV_Changer
             this.lblResetDefault.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblResetDefault.Location = new System.Drawing.Point(121, 283);
             this.lblResetDefault.Name = "lblResetDefault";
-            this.lblResetDefault.Size = new System.Drawing.Size(126, 16);
+            this.lblResetDefault.Size = new System.Drawing.Size(125, 16);
             this.lblResetDefault.TabIndex = 16;
             this.lblResetDefault.Text = "Reset to default (65)";
             // 
@@ -329,7 +316,7 @@ namespace Ghosts_FoV_Changer
             this.chkHotkeys.Location = new System.Drawing.Point(123, 168);
             this.chkHotkeys.Name = "chkHotkeys";
             this.chkHotkeys.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
-            this.chkHotkeys.Size = new System.Drawing.Size(124, 20);
+            this.chkHotkeys.Size = new System.Drawing.Size(123, 20);
             this.chkHotkeys.TabIndex = 4;
             this.chkHotkeys.Text = "Disable hotkeys";
             this.chkHotkeys.UseVisualStyleBackColor = true;
@@ -353,7 +340,7 @@ namespace Ghosts_FoV_Changer
             this.rbSingleplayer.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.rbSingleplayer.Location = new System.Drawing.Point(12, 34);
             this.rbSingleplayer.Name = "rbSingleplayer";
-            this.rbSingleplayer.Size = new System.Drawing.Size(102, 20);
+            this.rbSingleplayer.Size = new System.Drawing.Size(101, 20);
             this.rbSingleplayer.TabIndex = 1;
             this.rbSingleplayer.Text = "Singleplayer";
             this.rbSingleplayer.UseVisualStyleBackColor = true;
@@ -365,7 +352,7 @@ namespace Ghosts_FoV_Changer
             this.rbMultiplayer.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.rbMultiplayer.Location = new System.Drawing.Point(23, 14);
             this.rbMultiplayer.Name = "rbMultiplayer";
-            this.rbMultiplayer.Size = new System.Drawing.Size(91, 20);
+            this.rbMultiplayer.Size = new System.Drawing.Size(90, 20);
             this.rbMultiplayer.TabIndex = 0;
             this.rbMultiplayer.Text = "Multiplayer";
             this.rbMultiplayer.UseVisualStyleBackColor = true;
@@ -382,7 +369,6 @@ namespace Ghosts_FoV_Changer
             // 
             // MainForm
             // 
-            this.AcceptButton = this.btnStartGame;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(258, 399);
@@ -403,14 +389,13 @@ namespace Ghosts_FoV_Changer
             this.Controls.Add(this.btnAbout);
             this.Controls.Add(this.btnExit);
             this.Controls.Add(this.numFoV);
-            this.Controls.Add(this.btnStartGame);
             this.Controls.Add(this.chkBeep);
             this.Controls.Add(this.lblFoV);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "MainForm";
-            this.Text = "Ghosts FoV Changer";
+            this.Text = "MultiCoD FoV Changer";
             this.Deactivate += new System.EventHandler(this.MainForm_Deactivate);
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.MouseClick += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseClick);
@@ -431,7 +416,6 @@ namespace Ghosts_FoV_Changer
         private System.Windows.Forms.Timer TimerCheck;
         private System.Windows.Forms.CheckBox chkBeep;
         private System.Windows.Forms.Timer TimerVerif;
-        private System.Windows.Forms.Button btnStartGame;
         private System.Windows.Forms.NumericUpDown numFoV;
         private System.Windows.Forms.Button btnExit;
         private System.Windows.Forms.Button btnAbout;

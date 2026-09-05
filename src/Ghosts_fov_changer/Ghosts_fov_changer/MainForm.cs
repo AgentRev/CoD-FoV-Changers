@@ -83,8 +83,6 @@ namespace Ghosts_FoV_Changer
         bool hotKeys; // = DefaultGameMode.c_hotKeys;
         Keys[] catchKeys; // = DefaultGameMode.c_catchKeys;
 
-        string exePath;
-        bool gameFound = false;
         bool saveSettings = true;
         bool writeAllowed = false;
         bool currentlyReading = false;
@@ -203,14 +201,6 @@ namespace Ghosts_FoV_Changer
             return false;
         }
 
-        public static string ProgramFilesx86()
-        {
-            if (IntPtr.Size == 8 || !String.IsNullOrEmpty(Environment.GetEnvironmentVariable("PROCESSOR_ARCHITEW6432")))
-                return Environment.GetEnvironmentVariable("ProgramFiles(x86)");
-            else
-                return Environment.GetEnvironmentVariable("ProgramFiles");
-        }
-
         private Keys currentKey;
 
         //#####################################################################################################################
@@ -246,53 +236,7 @@ namespace Ghosts_FoV_Changer
             objKeyboardProcess = new LowLevelKeyboardProc(captureKey);
             ptrHook = SetWindowsHookEx(13, objKeyboardProcess, GetModuleHandle(objCurrentModule.ModuleName), 0);
 
-            ////IsGameInstalled();
-
-            //MessageBox.Show(Path.GetTempPath());
-            //if (gameFound)
-            //{
-            /*string dirName = Path.Combine(Path.GetTempPath(), "MW3_fov_lib");
-            if (!Directory.Exists(dirName))
-                Directory.CreateDirectory(dirName);
-            string dllPath = Path.Combine(dirName, "MW3_fov_lib.dll");
-
-            using (Stream stm = Assembly.GetExecutingAssembly().GetManifestResourceStream(Assembly.GetExecutingAssembly().GetName().Name + ".Resources.MW3_fov_lib.dll"))
-            {
-                try
-                {
-                    using (Stream outFile = File.Create(dllPath))
-                    {
-                        const int sz = 4096;
-                        byte[] buf = new byte[sz];
-                        while (true)
-                        {
-                            int nRead = stm.Read(buf, 0, sz);
-                            if (nRead < 1)
-                                break;
-                            outFile.Write(buf, 0, nRead);
-                        }
-                    }
-                }
-                catch { }
-            }
-
-            if (!debug)
-            {
-                IntPtr h = LoadLibrary(dllPath);
-                if (h == IntPtr.Zero)
-                {
-                    MessageBox.Show("Unable to load library " + dllPath, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    Application.Exit();
-                }
-            }*/
-
-            ////numFoV.Value = Convert.ToDecimal(fFoV);
-            ////numFoV.Enabled = true;
-            ////ToggleButton(!isRunning(false));
-
             TimerCheck.Start();
-
-            //}
         }
 
         #region save/read settings
@@ -576,29 +520,9 @@ namespace Ghosts_FoV_Changer
             lblVersion.Text = "v" + c_toolVer;
             lblVersion.Visible = true;
 
-            IsGameInstalled();
-
             numFoV.Value = Convert.ToDecimal(fFoV);
             numFoV.Enabled = true;
             ToggleButton(!isRunning(false));
-        }
-
-        void IsGameInstalled()
-        {
-            string lePath = Path.Combine(ProgramFilesx86(), @"Steam\" + gameMode.GetValue("c_exeDirectory") + @"\" + gameMode.GetValue("c_exe") + ".exe");
-            TryPath(lePath);
-            if (!gameFound)
-            {
-                RegistryKey steamSubKey = Registry.CurrentUser.OpenSubKey(@"Software\Valve\Steam\Apps\" + gameMode.GetValue("c_gameID"));
-                if (steamSubKey != null)
-                {
-                    object installed = steamSubKey.GetValue("Installed");
-                    if (installed != null && Convert.ToInt32(installed) > 0)
-                    {
-                        gameFound = true;
-                    }
-                }
-            }
         }
 
         void GameModeChanged(bool save = true)
@@ -664,22 +588,12 @@ namespace Ghosts_FoV_Changer
 
         private void ToggleButton(bool state)
         {
-            btnStartGame.Enabled = rbSingleplayer.Enabled = rbMultiplayer.Enabled = state;
-            btnStartGame.Text = state ? "Start Game" : "Running";
+            rbSingleplayer.Enabled = rbMultiplayer.Enabled = state;
         }
 
         private void UpdateNumBox()
         {
             SetFoV(Convert.ToSingle(numFoV.Value));
-        }
-
-        private void TryPath(string filePath)
-        {
-            if (File.Exists(filePath))
-            {
-                exePath = filePath;
-                gameFound = true;
-            }
         }
 
         private void progStart()
@@ -708,7 +622,7 @@ namespace Ghosts_FoV_Changer
             writeAllowed = false;
             TimerUpdate.Stop();
 
-            if (!btnStartGame.Enabled)
+            if (!rbMultiplayer.Enabled)
                 ToggleButton(true);
         }
 
@@ -918,7 +832,7 @@ namespace Ghosts_FoV_Changer
         {
             if (proc != null && mem != null && isRunning(false))
             {
-                if (btnStartGame.Enabled) ToggleButton(false);
+                if (rbMultiplayer.Enabled) ToggleButton(false);
                 proc.Refresh();
 
                 try
@@ -962,7 +876,7 @@ namespace Ghosts_FoV_Changer
                                 {
                                     string memory = BitConverter.ToString(BitConverter.GetBytes(mem.ReadFloat(pFoV)));
 
-                                    MessageBox.Show(this, "The memory research pattern wasn't able to find the FoV offset in your " + gameMode.GetValue("c_supportMessage") + ".\n" +
+                                    MessageBox.Show(this, "The memory research pattern wasn't able to find the FoV offset in " + gameMode.GetValue("c_exe") + ".exe.\n" +
                                                           "Please look for an updated version of this FoV Changer tool.\n\n" +
                                                           "If you believe this might be a bug, please send me an email at agentrevo@gmail.com, and include a screenshot of this:\n" +
                                                           "\n" + c_toolVer +
@@ -1121,22 +1035,6 @@ namespace Ghosts_FoV_Changer
             }
         }
 
-        private void btnStartGame_Click(object sender, EventArgs e)
-        {
-            if (gameFound)
-            {
-                try { Process.Start("steam://rungameid/" + (string)gameMode.GetValue("c_gameID")); }
-                catch
-                {
-                    MessageBox.Show(this, (string)gameMode.GetValue("c_errorMessage"), "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                }
-            }
-            else
-            {
-                MessageBox.Show(this, (string)gameMode.GetValue("c_notFoundMessage"), "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
-        }
-
         private void numFoV_ValueChanged(object sender, EventArgs e)
         {
             UpdateNumBox();
@@ -1151,13 +1049,10 @@ namespace Ghosts_FoV_Changer
         {
             MessageBox.Show(this, this.Text + " v" + c_toolVer + "\n" +
                                   "Made by AgentRev\n\n"+
-                                  //"Approved by Infinity Ward and Valve\n\n" +
-                                  "Contact email: agentrevo@gmail.com\n", //+
-                                  //"Most emails are answered within 24h, or if you're lucky, 5 minutes.\n" +
-                                  //"If your question is about any platform other than PC, the answer is 'no'.",
+                                  "agentrevo@gmail.com\n",
                                   "About", MessageBoxButtons.OK, MessageBoxIcon.Information, 
                                   MessageBoxDefaultButton.Button1,
-                                  0, "http://www.callofduty.com/message/205674719");
+                                  0, "mailto:agentrevo@gmail.com");
 
         }
 
@@ -1242,6 +1137,11 @@ namespace Ghosts_FoV_Changer
         }
 
         #endregion
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 
     public static class TypeExtensionMethods

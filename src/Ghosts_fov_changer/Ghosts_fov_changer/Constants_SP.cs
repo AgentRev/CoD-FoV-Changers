@@ -15,18 +15,12 @@ namespace Ghosts_FoV_Changer
 
         public const string c_settingsDirName = "Ghosts FoV Changer";
         public const string c_exe = "iw6sp64_ship";
-        public const string c_exeDirectory = @"steamapps\common\Call of Duty Ghosts";
         public const string c_settingsFileName = "sp.ini";
-        public const string c_gameID = "209160";
-        public const string c_supportMessage = "CoD:Ghosts SP executable (iw6sp64_ship.exe)";
-        public const string c_manualMessage = "\nPlease start CoD:Ghosts SP normally, and the FoV changer will enable itself.";
-        public const string c_errorMessage = "An unexpected error occured while trying to start the game." + c_manualMessage;
-        public const string c_notFoundMessage = "The game cannot be found." + c_manualMessage;
 
         public const string c_cVar = "cg_fov";
         public const dword_ptr c_memSearchRange = 0x90000000;
         public const dword_ptr c_baseAddr = 0x0140000000;
-        public const dword_ptr c_pFoV = 0x014586FB10;
-        public const byte c_checkRange = 0x30;
+        public const dword_ptr c_pFoV = 0x0145000000;
+        public const byte c_checkRange = 0x40;
     }
 }
