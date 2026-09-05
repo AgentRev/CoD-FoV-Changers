@@ -89,7 +89,6 @@ namespace Ghosts_FoV_Changer
         bool writeAllowed = false;
         bool currentlyReading = false;
         bool updateAvailable = false;
-        bool firstTime = false;
         bool ignoreModeChanged = false;
         
         #endregion
@@ -506,11 +505,6 @@ namespace Ghosts_FoV_Changer
 
             try
             {
-                if (!File.Exists(gameModeFile))
-                {
-                    firstTime = true;
-                }
-
                 using (StreamReader sr = new StreamReader(gameModeFile))
                 {
                     string line = sr.ReadToEnd();
@@ -1032,8 +1026,6 @@ namespace Ghosts_FoV_Changer
                 string dataSafe = Regex.Match(returnData, @"SafeToUse\[([A-Za-z]*?)\]").Groups[1].Value;
                 string dataInfo = Regex.Unescape(HttpUtility.HtmlDecode(Regex.Match(returnData, @"UpdateInfo\[(.*?)\]").Groups[1].Value));
                 string dataDownloadLink = Regex.Match(returnData, @"DownloadLink\[(.*?)\]").Groups[1].Value;
-                string dataAnalytics = Regex.Match(returnData, @"GoogleAnalytics\[([A-Za-z\-0-9]*?)\]").Groups[1].Value;
-                string dataIPService = Regex.Match(returnData, @"IPService\[(.*?)\]").Groups[1].Value;
 
                 //MessageBox.Show(dataSafe);
                 if (!String.IsNullOrEmpty(dataSafe) && dataSafe.ToLower() == "vacdetected")
@@ -1053,7 +1045,7 @@ namespace Ghosts_FoV_Changer
                 //MessageBox.Show(dataVer);
                 if (!String.IsNullOrEmpty(dataVer) && VersionNum(dataVer) > VersionNum(c_toolVer))
                 {
-                    this.Invoke(new Action(() => 
+                    this.Invoke(new Action(() =>
                     {
                         updateAvailable = true;
 
@@ -1075,22 +1067,6 @@ namespace Ghosts_FoV_Changer
                         }
                     }));
                 }
-
-                if (!String.IsNullOrEmpty(dataAnalytics))
-                {
-                    GAnalytics.trackingID = dataAnalytics;
-                }
-
-                if (!String.IsNullOrEmpty(dataIPService))
-                {
-                    GAnalytics.ipService = dataIPService;
-                }
-            }
-            catch {}
-
-            try
-            {
-                GAnalytics.TriggerAnalytics((string)gameMode.GetValue("c_settingsDirName") + " v" + c_toolVer, firstTime);
             }
             catch {}
         }
