@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Ghosts_FoV_Changer
 {
@@ -61,13 +61,9 @@ namespace Ghosts_FoV_Changer
             this.lblResetDefault = new System.Windows.Forms.Label();
             this.btnKeyReset = new System.Windows.Forms.Button();
             this.chkHotkeys = new System.Windows.Forms.CheckBox();
-            this.gbGameMode = new System.Windows.Forms.GroupBox();
-            this.rbSingleplayer = new System.Windows.Forms.RadioButton();
-            this.rbMultiplayer = new System.Windows.Forms.RadioButton();
             this.ToolTipReset = new System.Windows.Forms.ToolTip(this.components);
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.numFoV)).BeginInit();
-            this.gbGameMode.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -322,42 +318,6 @@ namespace Ghosts_FoV_Changer
             this.chkHotkeys.UseVisualStyleBackColor = true;
             this.chkHotkeys.CheckedChanged += new System.EventHandler(this.chkHotkeys_CheckedChanged);
             // 
-            // gbGameMode
-            // 
-            this.gbGameMode.Controls.Add(this.rbSingleplayer);
-            this.gbGameMode.Controls.Add(this.rbMultiplayer);
-            this.gbGameMode.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.gbGameMode.Location = new System.Drawing.Point(12, 65);
-            this.gbGameMode.Name = "gbGameMode";
-            this.gbGameMode.Size = new System.Drawing.Size(128, 61);
-            this.gbGameMode.TabIndex = 0;
-            this.gbGameMode.TabStop = false;
-            // 
-            // rbSingleplayer
-            // 
-            this.rbSingleplayer.AutoSize = true;
-            this.rbSingleplayer.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.rbSingleplayer.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.rbSingleplayer.Location = new System.Drawing.Point(12, 34);
-            this.rbSingleplayer.Name = "rbSingleplayer";
-            this.rbSingleplayer.Size = new System.Drawing.Size(101, 20);
-            this.rbSingleplayer.TabIndex = 1;
-            this.rbSingleplayer.Text = "Singleplayer";
-            this.rbSingleplayer.UseVisualStyleBackColor = true;
-            // 
-            // rbMultiplayer
-            // 
-            this.rbMultiplayer.AutoSize = true;
-            this.rbMultiplayer.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.rbMultiplayer.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.rbMultiplayer.Location = new System.Drawing.Point(23, 14);
-            this.rbMultiplayer.Name = "rbMultiplayer";
-            this.rbMultiplayer.Size = new System.Drawing.Size(90, 20);
-            this.rbMultiplayer.TabIndex = 0;
-            this.rbMultiplayer.Text = "Multiplayer";
-            this.rbMultiplayer.UseVisualStyleBackColor = true;
-            this.rbMultiplayer.CheckedChanged += new System.EventHandler(this.rbGameMode_CheckedChanged);
-            // 
             // pictureBox1
             // 
             this.pictureBox1.Image = global::Ghosts_FoV_Changer.Properties.Resources.codghosts_banner;
@@ -373,7 +333,6 @@ namespace Ghosts_FoV_Changer
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(258, 399);
             this.Controls.Add(this.pictureBox1);
-            this.Controls.Add(this.gbGameMode);
             this.Controls.Add(this.chkHotkeys);
             this.Controls.Add(this.btnKeyReset);
             this.Controls.Add(this.lblResetDefault);
@@ -400,8 +359,6 @@ namespace Ghosts_FoV_Changer
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.MouseClick += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseClick);
             ((System.ComponentModel.ISupportInitialize)(this.numFoV)).EndInit();
-            this.gbGameMode.ResumeLayout(false);
-            this.gbGameMode.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -433,9 +390,6 @@ namespace Ghosts_FoV_Changer
         private System.Windows.Forms.Label lblResetDefault;
         private System.Windows.Forms.Button btnKeyReset;
         private System.Windows.Forms.CheckBox chkHotkeys;
-        private System.Windows.Forms.GroupBox gbGameMode;
-        private System.Windows.Forms.RadioButton rbSingleplayer;
-        private System.Windows.Forms.RadioButton rbMultiplayer;
         private System.Windows.Forms.ToolTip ToolTipReset;
         private System.Windows.Forms.PictureBox pictureBox1;
 

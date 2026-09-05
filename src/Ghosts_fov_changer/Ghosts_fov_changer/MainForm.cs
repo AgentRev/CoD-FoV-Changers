@@ -23,8 +23,6 @@ namespace Ghosts_FoV_Changer
     using dword_ptr = Int32;
 #endif
 
-    using DefaultGameMode = Multiplayer;
-
     #region struct KeyHook
 
     [StructLayout(LayoutKind.Sequential)]
@@ -67,27 +65,20 @@ namespace Ghosts_FoV_Changer
 
         #region settings
 
-        static Type gameMode = typeof(Multiplayer);
+        static string settingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), Constants.c_settingsDirName);
+        static string settingsFile = Path.Combine(settingsPath, Constants.c_settingsFileName);
 
-        static string settingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), DefaultGameMode.c_settingsDirName);
-        static string settingsFile = Path.Combine(settingsPath, DefaultGameMode.c_settingsFileName);
-        static string gameModeFile = Path.Combine(settingsPath, "gamemode.ini");
-
-        // = gameMode.GetValue("c_FoV");
-
-        //string toolVer = c_toolVer;
-        dword_ptr pFoV; // = DefaultGameMode.c_pFoV;
-        float fFoV; // = DefaultGameMode.c_FoV;
-        bool doBeep; // = DefaultGameMode.c_doBeep;
-        bool updateNotify; // = DefaultGameMode.c_updateNotify;
-        bool hotKeys; // = DefaultGameMode.c_hotKeys;
-        Keys[] catchKeys; // = DefaultGameMode.c_catchKeys;
+        dword_ptr pFoV;
+        float fFoV;
+        bool doBeep;
+        bool updateNotify;
+        bool hotKeys;
+        Keys[] catchKeys;
 
         bool saveSettings = true;
         bool writeAllowed = false;
         bool currentlyReading = false;
         bool updateAvailable = false;
-        bool ignoreModeChanged = false;
         
         #endregion
 
@@ -119,60 +110,49 @@ namespace Ghosts_FoV_Changer
 
         bool isRunning(bool init)
         {
-            Process[] spProcs = Process.GetProcessesByName(Singleplayer.c_exe);
-            Process[] mpProcs = Process.GetProcessesByName(Multiplayer.c_exe);
-
-            Process[] procs = new Process[mpProcs.Length + spProcs.Length];
-
-            try
+            if (proc != null)
             {
-                spProcs.CopyTo(procs, 0);
-                mpProcs.CopyTo(procs, spProcs.Length);
-            }
-            catch { }
-
-            if (procs.Length > 0)
-            {
-                if (proc == null && init)
+                proc.Refresh();
+                if (proc.HasExited)
                 {
-                    proc = procs[0];
-
-                    if (proc.ProcessName == Singleplayer.c_exe && !rbSingleplayer.Checked)
-                        rbSingleplayer.Checked = true;
-                    else if (proc.ProcessName == Multiplayer.c_exe && !rbMultiplayer.Checked)
-                        rbMultiplayer.Checked = true;
-
-                    try
+                    if (init)
                     {
-                        mem = new Memory((string)gameMode.GetValue("c_cVar"), proc.Id, (dword_ptr)gameMode.GetValue("c_baseAddr"), (byte)gameMode.GetValue("c_checkRange"), c_pOffset);
+                        TimerVerif.Stop();
+                        mem = null;
+                        progStop();
                     }
-                    catch (Exception ex)
-                    {
-                        ErrMessage(ex);
-                        Application.Exit();
-                    }
-
-                    TimerVerif.Start();
+                    proc = null;
+                    return false;
                 }
-
-                /*if (proc != null)
-                {
-                    proc.Refresh();
-                    return !proc.HasExited;
-                }*/
-                
                 return true;
             }
-            else
+
+            foreach (string exe in Constants.c_exes)
             {
-                if (proc != null && init)
+                Process[] procs = Process.GetProcessesByName(exe);
+                if (procs.Length > 0)
                 {
-                    TimerVerif.Stop();
-                    mem = null;
-                    progStop();
+                    if (init)
+                    {
+                        proc = procs[0];
+
+                        try
+                        {
+                            mem = new Memory(Constants.c_cVar, proc.Id, Constants.c_baseAddr, Constants.c_checkRange, c_pOffset);
+                        }
+                        catch (Exception ex)
+                        {
+                            ErrMessage(ex);
+                            Application.Exit();
+                        }
+
+                        TimerVerif.Start();
+                    }
+                    return true;
                 }
-                return false;
             }
+
+            return false;
         }
 
         void TimerReset()
@@ -183,7 +163,7 @@ namespace Ghosts_FoV_Changer
 
         bool isOffsetWrong(dword_ptr ptr)
         {
-            for (int i = 0x20; i < 0x30 /*(byte)gameMode.GetValue("c_checkRange")*/; i += 0x10)
+            for (int i = 0x20; i < 0x30; i += 0x10)
             {
                 //MessageBox.Show(ReadFloat(Increment(ptr, i)).ToString());
                 try
@@ -214,22 +194,8 @@ namespace Ghosts_FoV_Changer
             this.Text = "ESL Ghosts FoV Changer";
 #endif
 
-            // string updtmess = HttpUtility.HtmlEncode(Regex.Escape("This is a test message\nhello\n123"));
-            // MessageBox.Show(updtmess);
-            // Clipboard.SetText(updtmess);
-
-            ////this.numFoV.Maximum = Convert.ToDecimal(DefaultGameMode.c_FoV_upperLimit); //new decimal(new int[] { c_FoV_upperLimit, 0, 0, 0 });
-            ////this.numFoV.Minimum = Convert.ToDecimal(DefaultGameMode.c_FoV_lowerLimit); //new decimal(new int[] { c_FoV_lowerLimit, 0, 0, 0 });
-
-            //MessageBox.Show(pFoV.ToString("x8"));
-
-            ////if (File.Exists(settingsFile)) ReadSettings();
-
-            ////lblVersion.Text = "v" + c_toolVer;
-            ////lblVersion.Visible = true;
-
             saveSettings = false;
-            ReadGameMode();
+            InitFovChanger();
             saveSettings = true;
 
             ProcessModule objCurrentModule = Process.GetCurrentProcess().MainModule;
@@ -266,10 +232,6 @@ namespace Ghosts_FoV_Changer
                                 {
                                     checkVer = varValue;
                                 }
-                                else if (varName == "GameMode")
-                                {
-                                    rbSingleplayer.Checked = (varValue == "sp");
-                                }
                                 else if (varName == "Beep")
                                 {
                                     chkBeep.Checked = bool.Parse(varValue);
@@ -281,8 +243,8 @@ namespace Ghosts_FoV_Changer
                                 else if (varName == "FoVOffset" || varName == "RelativeFoVOffset")
                                 {
                                     dword_ptr tmp = dword_ptr.Parse(varValue, NumberStyles.AllowHexSpecifier);
-                                    if (tmp > (dword_ptr)gameMode.GetValue("c_baseAddr"))
-                                        pFoV = (varName == "RelativeFoVOffset" ? (dword_ptr)gameMode.GetValue("c_baseAddr") : 0) + tmp;
+                                    if (tmp > Constants.c_baseAddr)
+                                        pFoV = (varName == "RelativeFoVOffset" ? Constants.c_baseAddr : 0) + tmp;
                                 }
                                 else if (varName == "UpdateNotify")
                                 {
@@ -320,7 +282,7 @@ namespace Ghosts_FoV_Changer
             }
 
             if (checkVer != c_toolVer)
-                pFoV = (dword_ptr)gameMode.GetValue("c_pFoV");
+                pFoV = Constants.c_pFoV;
 
             UpdateCheck();
 
@@ -361,136 +323,10 @@ namespace Ghosts_FoV_Changer
                         File.Delete(settingsFile);
                         throw;
                     }
-
-                    SaveGameMode();
                 }
                 catch
                 {
                     saveSettings = false;
-                }
-            }
-        }
-
-        /*private void StringRead(string buffer, ref bool[] read, ref string checkVer)
-        {
-            if (!String.IsNullOrEmpty(buffer.Trim()))
-            {
-                if (buffer.StartsWith("ToolVersion=") || buffer.StartsWith("GameVersion="))
-                {
-                    checkVer = buffer.Substring(12);
-                    read[0] = true;
-                    //if (toolVer != c_toolVer) Checksum(settingsFile);
-                }
-                else if (buffer.StartsWith("Beep="))
-                {
-                    chkBeep.Checked = (buffer.Substring(5).ToLower() == "false") ? false : true;
-                    read[1] = true;
-                }
-                else if (buffer.StartsWith("FoV="))
-                {
-                    SetFoV(float.Parse(buffer.Substring(4)));
-                    read[2] = true;
-                }
-                else if (buffer.StartsWith("RelativeFoVOffset="))
-                {
-                    //MessageBox.Show((pFoV).ToString());
-
-                    uint tmp = uint.Parse(buffer.Substring(18), NumberStyles.AllowHexSpecifier);
-                    if (tmp > c_baseAddr && tmp < 0x40000000)
-                        //MessageBox.Show(Increment(c_pFoV, -0x250000).ToString("x8"));
-                        pFoV = c_baseAddr + tmp;
-                    read[3] = true;
-
-                    //MessageBox.Show((pFoV).ToString());
-                }
-                else if (buffer.StartsWith("FoVOffset="))
-                {
-                    uint tmp = uint.Parse(buffer.Substring(10), NumberStyles.AllowHexSpecifier);
-                    if (tmp > c_baseAddr && tmp < 0x40000000)
-                        pFoV = tmp;
-                    read[3] = true;
-                }
-                else if (buffer.StartsWith("UpdatePopup=") || buffer.StartsWith("UpdateCheck="))
-                {
-                    chkUpdate.Checked = (buffer.Substring(12).ToLower() == "false") ? false : true;
-                    read[4] = true;
-                }
-                else if (buffer.StartsWith("DisableHotkeys="))
-                {
-                    chkHotkeys.Checked = (buffer.Substring(15).ToLower() == "false") ? false : true;
-                    read[5] = true;
-                }
-                else if (buffer.StartsWith("HotkeyIncrease="))
-                {
-                    catchKeys[0] = (Keys)int.Parse(buffer.Substring(15));
-                    btnKeyZoomOut.Text = VirtualKeyName(catchKeys[0]);
-                    read[6] = true;
-                }
-                else if (buffer.StartsWith("HotkeyDecrease="))
-                {
-                    catchKeys[1] = (Keys)int.Parse(buffer.Substring(15));
-                    btnKeyZoomIn.Text = VirtualKeyName(catchKeys[1]);
-                    read[7] = true;
-                }
-                else if (buffer.StartsWith("HotkeyReset="))
-                {
-                    catchKeys[2] = (Keys)int.Parse(buffer.Substring(12));
-                    btnKeyReset.Text = VirtualKeyName(catchKeys[2]);
-                    read[8] = true;
-                }
-                else throw new Exception("Invalid setting: " + buffer);
-            }
-        }*/
-
-        void ReadGameMode()
-        {
-            saveSettings = false;
-            ignoreModeChanged = true;
-
-            try
-            {
-                using (StreamReader sr = new StreamReader(gameModeFile))
-                {
-                    string line = sr.ReadToEnd();
-
-                    if (line.StartsWith("mp"))
-                        rbMultiplayer.Checked = true;
-                    else if (line.StartsWith("sp"))
-                        rbSingleplayer.Checked = true;
-                }
-            }
-            catch
-            {
-                rbMultiplayer.Checked = true;
-            }
-
-            GameModeChanged(false);
-
-            ignoreModeChanged = false;
-            saveSettings = true;
-        }
-
-        void SaveGameMode()
-        {
-            if (saveSettings && !currentlyReading)
-            {
-                try
-                {
-                    using (StreamWriter sw = new StreamWriter(gameModeFile))
-                    {
-                        if (rbMultiplayer.Checked)
-                            sw.Write("mp");
-                        else if (rbSingleplayer.Checked)
-                            sw.Write("sp");
-                    }
-                }
-                catch
-                {
-                    try
-                    {
-                        File.Delete(gameModeFile);
-                    }
-                    catch { }
                 }
             }
         }
@@ -501,11 +337,10 @@ namespace Ghosts_FoV_Changer
 
         void InitFovChanger()
         {
-            settingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), (string)gameMode.GetValue("c_settingsDirName"));
-            settingsFile = Path.Combine(settingsPath, (string)gameMode.GetValue("c_settingsFileName"));
-            gameModeFile = Path.Combine(settingsPath, "gamemode.ini");
+            settingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), Constants.c_settingsDirName);
+            settingsFile = Path.Combine(settingsPath, Constants.c_settingsFileName);
 
-            pFoV = (dword_ptr)gameMode.GetValue("c_pFoV");
+            pFoV = Constants.c_pFoV;
             fFoV = c_FoV;
             doBeep = c_doBeep;
             updateNotify = c_updateNotify;
@@ -522,24 +357,6 @@ namespace Ghosts_FoV_Changer
 
             numFoV.Value = Convert.ToDecimal(fFoV);
             numFoV.Enabled = true;
-            ToggleButton(!isRunning(false));
-        }
-
-        void GameModeChanged(bool save = true)
-        {
-            if (save)
-                SaveSettings();
-
-            if (rbMultiplayer.Checked)
-                gameMode = typeof(Multiplayer);
-
-            else if (rbSingleplayer.Checked)
-                gameMode = typeof(Singleplayer);
-
-            InitFovChanger();
-            SaveSettings();
-
-            //isRunning(false);
         }
 
         private void UpdateMem()
@@ -568,6 +385,7 @@ namespace Ghosts_FoV_Changer
             else
                 SaveSettings();
 
+
             try
             {
                 if (mem != null && isRunning(false) && writeAllowed)
@@ -584,11 +402,6 @@ namespace Ghosts_FoV_Changer
                 numFoV.Value = Convert.ToDecimal(fFoV);
                 SaveSettings();
             }
-        }
-
-        private void ToggleButton(bool state)
-        {
-            rbSingleplayer.Enabled = rbMultiplayer.Enabled = state;
         }
 
         private void UpdateNumBox()
@@ -621,9 +434,6 @@ namespace Ghosts_FoV_Changer
 
             writeAllowed = false;
             TimerUpdate.Stop();
-
-            if (!rbMultiplayer.Enabled)
-                ToggleButton(true);
         }
 
         private long VersionNum(string data)
@@ -747,7 +557,7 @@ namespace Ghosts_FoV_Changer
         public void ErrMessage(Exception ex)
         {
             MessageBox.Show(this, "An unexpected error occured when attempting to access the game's process.\n\n" +
-                                  "If the FoV changer has already worked for you before, please try to delete '" + gameMode.GetValue("c_settingsFileName") + "' located in " + settingsPath + "\n\n" +
+                                  "If the FoV changer has already worked for you before, please try to delete '" + Constants.c_settingsFileName + "' located in " + settingsPath + "\n\n" +
                                   "Otherwise, please try to run the changer as an administator. If that doesn't work, " +
                                   "please contact me at agentrevo@gmail.com, and be sure to include a screenshot of this error:\n\n" + ex.ToString(),
                                   "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -832,7 +642,6 @@ namespace Ghosts_FoV_Changer
         {
             if (proc != null && mem != null && isRunning(false))
             {
-                if (rbMultiplayer.Enabled) ToggleButton(false);
                 proc.Refresh();
 
                 try
@@ -846,7 +655,7 @@ namespace Ghosts_FoV_Changer
                             mem.FindFoVOffset(ref pFoV, ref step);
 
                             if (!isOffsetWrong(pFoV)) progStart();
-                            else if (proc.PeakWorkingSet64 > (dword_ptr)gameMode.GetValue("c_memSearchRange"))
+                            else if (proc.PeakWorkingSet64 > Constants.c_memSearchRange)
                             {
                                 TimerVerif.Stop();
                                 TimerCheck.Stop();
@@ -876,7 +685,7 @@ namespace Ghosts_FoV_Changer
                                 {
                                     string memory = BitConverter.ToString(BitConverter.GetBytes(mem.ReadFloat(pFoV)));
 
-                                    MessageBox.Show(this, "The memory research pattern wasn't able to find the FoV offset in " + gameMode.GetValue("c_exe") + ".exe.\n" +
+                                    MessageBox.Show(this, "The memory research pattern wasn't able to find the FoV offset in " + proc.ProcessName + ".exe.\n" +
                                                           "Please look for an updated version of this FoV Changer tool.\n\n" +
                                                           "If you believe this might be a bug, please send me an email at agentrevo@gmail.com, and include a screenshot of this:\n" +
                                                           "\n" + c_toolVer +
@@ -887,7 +696,7 @@ namespace Ghosts_FoV_Changer
                                                           "\nFoV pointer: 0x" + (pFoV - c_pOffset).ToString("X8") + " = " + memory,
                                                           "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
-                                    pFoV = (dword_ptr)gameMode.GetValue("c_pFoV");
+                                    pFoV = Constants.c_pFoV;
                                     Application.Exit();
                                 }
                                 else
@@ -1130,25 +939,11 @@ namespace Ghosts_FoV_Changer
             ChgKey(2, "Reset to default", btnKeyReset);
         }
 
-        private void rbGameMode_CheckedChanged(object sender, EventArgs e)
-        {
-            if (!ignoreModeChanged)
-                GameModeChanged();
-        }
-
         #endregion
 
         private void MainForm_Load(object sender, EventArgs e)
         {
 
-        }
-    }
-
-    public static class TypeExtensionMethods
-    {
-        public static object GetValue(this Type gameType, string field)
-        {
-            return gameType.GetField(field, BindingFlags.Public | BindingFlags.Static).GetValue(null);
         }
     }
 }
