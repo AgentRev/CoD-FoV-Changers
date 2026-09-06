@@ -31,5 +31,5 @@ using System.Runtime.InteropServices;
 // Vous pouvez spécifier toutes les valeurs ou indiquer les numéros de build et de révision par défaut 
 // en utilisant '*', comme indiqué ci-dessous :
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion(Ghosts_FoV_Changer.MainForm.c_toolVer)]
-[assembly: AssemblyFileVersion(Ghosts_FoV_Changer.MainForm.c_toolVer)]
+[assembly: AssemblyVersion(MultiCoD_FoV_Changer.MainForm.c_toolVer)]
+[assembly: AssemblyFileVersion(MultiCoD_FoV_Changer.MainForm.c_toolVer)]

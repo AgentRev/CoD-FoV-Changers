@@ -15,7 +15,7 @@ using System.Windows.Forms;
 using Microsoft.Win32;
 
 
-namespace Ghosts_FoV_Changer
+namespace MultiCoD_FoV_Changer
 {
 #if WIN64
     using dword_ptr = UInt64;

@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
-namespace Ghosts_FoV_Changer
+namespace MultiCoD_FoV_Changer
 {
     public partial class ChangeKey : Form
     {

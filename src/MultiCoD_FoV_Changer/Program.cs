@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace Ghosts_FoV_Changer
+namespace MultiCoD_FoV_Changer
 {
     static class Program
     {

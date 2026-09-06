@@ -1,6 +1,6 @@
 using System;
 
-namespace Ghosts_FoV_Changer
+namespace MultiCoD_FoV_Changer
 {
     partial class MainForm
     {

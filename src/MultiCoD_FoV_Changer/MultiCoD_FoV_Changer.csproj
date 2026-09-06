@@ -8,8 +8,8 @@
     <ProjectGuid>{99358473-C75A-447E-9FE4-CBC462BD2A16}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Ghosts_FoV_Changer</RootNamespace>
-    <AssemblyName>Ghosts_FoV_Changer</AssemblyName>
+    <RootNamespace>MultiCoD_FoV_Changer</RootNamespace>
+    <AssemblyName>MultiCoD FoV Changer</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>

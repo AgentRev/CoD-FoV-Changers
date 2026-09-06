@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace Ghosts_FoV_Changer
+namespace MultiCoD_FoV_Changer
 {
 #if WIN64
     using dword_ptr = UInt64;
