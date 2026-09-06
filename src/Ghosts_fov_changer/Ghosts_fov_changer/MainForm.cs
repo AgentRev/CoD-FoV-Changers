@@ -18,9 +18,9 @@ using Microsoft.Win32;
 namespace Ghosts_FoV_Changer
 {
 #if WIN64
-    using dword_ptr = Int64;
+    using dword_ptr = UInt64;
 #else
-    using dword_ptr = Int32;
+    using dword_ptr = UInt32;
 #endif
 
     #region struct KeyHook
@@ -170,7 +170,7 @@ namespace Ghosts_FoV_Changer
                 //MessageBox.Show(ReadFloat(Increment(ptr, i)).ToString());
                 try
                 {
-                    if (mem.ReadFloat(ptr + i) != c_FoV)
+                    if (mem.ReadFloat((ulong)(ptr + (dword_ptr)i)) != c_FoV)
                         return true;
                 }
                 catch (Exception ex)
@@ -246,7 +246,7 @@ namespace Ghosts_FoV_Changer
                                 {
                                     dword_ptr tmp = dword_ptr.Parse(varValue, NumberStyles.AllowHexSpecifier);
                                     if (tmp > Constants.c_baseAddr)
-                                        pFoV = (varName == "RelativeFoVOffset" ? Constants.c_baseAddr : 0) + tmp;
+                                        pFoV = (dword_ptr)(varName == "RelativeFoVOffset" ? Constants.c_baseAddr : 0) + tmp;
                                 }
                                 else if (varName == "UpdateNotify")
                                 {
@@ -653,7 +653,7 @@ namespace Ghosts_FoV_Changer
 
                         try
                         {
-                            mem.FindFoVOffset(ref pFoV, ref step);
+                            mem.FindDvarAddress(ref pFoV, ref step);
 
                             if (!isOffsetWrong(pFoV)) progStart();
                             else if (proc.PeakWorkingSet64 > Constants.c_memSearchRange)
@@ -682,7 +682,7 @@ namespace Ghosts_FoV_Changer
                                 //Console.Beep(5000, 100);
 
                                 //MessageBox.Show("find " + pFoV.ToString("X8"));
-                                if (isRunning(false) && !mem.FindFoVOffset(ref pFoV, ref step))
+                                if (isRunning(false) && !mem.FindDvarAddress(ref pFoV, ref step))
                                 {
                                     string memory = BitConverter.ToString(BitConverter.GetBytes(mem.ReadFloat(pFoV)));
 

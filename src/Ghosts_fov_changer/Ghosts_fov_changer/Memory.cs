@@ -6,9 +6,9 @@ using System.Text;
 namespace Ghosts_FoV_Changer
 {
 #if WIN64
-    using dword_ptr = Int64;
+    using dword_ptr = UInt64;
 #else
-    using dword_ptr = Int32;
+    using dword_ptr = UInt32;
 #endif
 
     public class Memory
@@ -17,72 +17,90 @@ namespace Ghosts_FoV_Changer
 
         [DllImport("kernel32.dll")]
         public static extern IntPtr OpenProcess(uint dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, int dwProcessId);
+
         [DllImport("kernel32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool CloseHandle(IntPtr hObject);
+
         [DllImport("kernel32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool ReadProcessMemory(IntPtr hProc, dword_ptr lpBaseAddress, [Out] byte[] lpBuffer, int nSize, [Out] int lpNumberOfBytesRead);
+
         [DllImport("kernel32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool ReadProcessMemory(IntPtr hProc, dword_ptr lpBaseAddress, out dword_ptr lpBuffer, int nSize, [Out] int lpNumberOfBytesRead);
+
         [DllImport("kernel32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool WriteProcessMemory(IntPtr hProc, dword_ptr lpBaseAddress, [In] byte[] lpBuffer, int nSize, [Out] int lpNumberOfBytesWritten);
 
         #endregion
 
-        #region Constants
-
-        const uint READ = 0x0410; // PROCESS_VM_READ | PROCESS_QUERY_INFORMATION
-        const uint WRITE = 0x0038; // PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ
-
-        #endregion
-
         #region Variables
 
-        byte pOffset;
+        byte dvarValueOffset;
         dword_ptr memReadRange;
         int pid;
         dword_ptr baseAddr;
-        dword_ptr varAddr;
+        dword_ptr currDvarAddr;
         byte[] cVar;
+        IntPtr hProc = IntPtr.Zero;
 
         #endregion
 
-        public Memory(string cVar, int pid, dword_ptr baseAddr, dword_ptr memReadRange, byte pOffset)
+        public Memory(string cVar, int pid, dword_ptr baseAddr, dword_ptr memReadRange, byte dvarValueOffset)
         {
             this.cVar = Encoding.ASCII.GetBytes(cVar + '\0');
             this.pid = pid;
             this.baseAddr = baseAddr;
             this.memReadRange = memReadRange;
-            this.pOffset = pOffset;
+            this.dvarValueOffset = dvarValueOffset;
+
+            const uint dwDesiredAccess = 0x0008 | 0x0010 | 0x0020; // PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE
+
+            try
+            {
+                hProc = OpenProcess(dwDesiredAccess, false, pid);
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"OpenProcess failed.\n{e.Message}", e);
+            }
+
+            if (hProc == IntPtr.Zero)
+            {
+                throw new Exception("OpenProcess failed.");
+            }
+        }
+
+        ~Memory()
+        {
+            if (hProc != IntPtr.Zero)
+            {
+                CloseHandle(hProc);
+            }
         }
 
         #region Methods
 
-        public bool FindFoVOffset(ref dword_ptr pFoV, ref byte step)
+        public bool FindDvarAddress(ref dword_ptr dvarAddr, ref byte step)
         {
-            IntPtr hProc;
             bool isFound = false;
-
-            try { hProc = OpenProcess(READ, false, pid); step = 0; }
-            catch (Exception e) { throw new Exception(String.Format("Failed to open the process handle during a FindFoVOffset statement;\n{0}", e.Message)); }
 
             if (hProc != IntPtr.Zero)
             {
-                step = 2;
+                step = 1;
                 byte[] buffer = new byte[memReadRange];
 
                 try { ReadProcessMemory(hProc, baseAddr, buffer, (int)memReadRange, 0); }
-                catch (Exception e) { step = 3; throw new Exception(String.Format("Failed to read process memory during a FindFoVOffset statement\nWin32 Error: {0}", e.Message)); }
+                catch (Exception e) { step = 2; throw new Exception(String.Format("Failed to read process memory during a FindDvarAddress statement\nWin32 Error: {0}", e.Message)); }
 
-                if (varAddr == 0)
+                if (currDvarAddr == 0)
                 {
-                    step = 4;
+                    step = 3;
                     int maxOffset = buffer.Length - cVar.Length;
 
-                    for (int i = 0; i < maxOffset; i += sizeof(Int32))
+                    for (int i = 0; i < maxOffset; i += sizeof(int))
                     {
                         bool match = true;
                         for (int j = 0; j < cVar.Length; j++)
@@ -96,95 +114,108 @@ namespace Ghosts_FoV_Changer
 
                         if (match)
                         {
-                            step = 5;
-                            varAddr = baseAddr + i;
+                            step = 4;
+                            currDvarAddr = baseAddr + (dword_ptr)i;
                             break;
                         }
                     }
                 }
 
-                if (varAddr > 0)
+                if (currDvarAddr > 0)
                 {
-                    int testIndex = (int)(pFoV - pOffset - baseAddr);
-                    dword_ptr testCurrentPtr = 0;
+                    int prevAddrIndex = (int)(dvarAddr - dvarValueOffset - baseAddr);
+                    dword_ptr prevAddr = 0;
 
-                    if (testIndex >= 0 && testIndex <= buffer.Length - sizeof(dword_ptr))
+                    if (prevAddrIndex >= 0 && prevAddrIndex <= buffer.Length - sizeof(dword_ptr))
                     {
-                        step = 14;
+                        step = 5;
 #if WIN64
-                        testCurrentPtr = BitConverter.ToInt64(buffer, testIndex);
+                        prevAddr = BitConverter.ToUInt64(buffer, prevAddrIndex);
 #else
-                        testCurrentPtr = BitConverter.ToInt32(buffer, testIndex);
+                        prevAddr = BitConverter.ToUInt32(buffer, prevAddrIndex);
 #endif
                     }
 
-                    if (testCurrentPtr == varAddr)
+                    if (currDvarAddr == prevAddr)
                     {
-                        step = 15;
+                        step = 6;
                         isFound = true;
                     }
                     else
                     {
-                        step = 9;
-                        int startIndex = (int)(varAddr - baseAddr);
+                        step = 7;
+                        int startIndex = (int)(currDvarAddr - baseAddr);
                         int maxIndex = buffer.Length - sizeof(dword_ptr);
 
-                        for (int i = startIndex; i <= maxIndex; i += sizeof(Int32))
+                        for (int i = startIndex; i <= maxIndex; i += sizeof(int))
                         {
 #if WIN64
-                            if (BitConverter.ToInt64(buffer, i) == varAddr)
+                            if (BitConverter.ToUInt64(buffer, i) == currDvarAddr)
 #else
-                            if (BitConverter.ToInt32(buffer, i) == varAddr)
+                            if (BitConverter.ToUInt32(buffer, i) == currDvarAddr)
 #endif
                             {
-                                step = 10;
-                                pFoV = baseAddr + i + pOffset;
+                                step = 8;
+                                dvarAddr = baseAddr + (dword_ptr)i + dvarValueOffset;
                                 isFound = true;
                                 break;
                             }
                         }
                     }
                 }
-
-                CloseHandle(hProc);
             }
 
             return isFound;
         }
 
-        public float ReadFloat(dword_ptr ptr)
+        private void ReadBytes(dword_ptr addr, int length, out byte[] buffer)
         {
-            byte[] buffer = new byte[sizeof(float)];
-            IntPtr hProc;
+            buffer = new byte[length];
 
-            try { hProc = OpenProcess(READ, false, pid); }
-            catch (Exception e) { throw new Exception(String.Format("Failed to open the process handle during a ReadFloat statement;\n{0}", e.Message)); }
-
-            if (hProc != IntPtr.Zero)
+            try
             {
-                try { ReadProcessMemory(hProc, ptr, buffer, sizeof(float), 0); }
-                catch (Exception e) { throw new Exception(String.Format("Failed to read process memory during a ReadFloat statement; Address = {0:X}\nWin32 Error: {1}", ptr, e.Message)); }
-
-                CloseHandle(hProc);
+                ReadProcessMemory(hProc, addr, buffer, length, 0);
             }
+            catch (Exception e)
+            {
+                throw new Exception($"Failed to read process memory at Address: 0x{addr:X}\nWin32 Error: {e.Message}", e);
+            }
+        }
 
+        private void WriteBytes(dword_ptr addr, byte[] bytes)
+        {
+            try
+            {
+                WriteProcessMemory(hProc, addr, bytes, bytes.Length, 0);
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"Failed to write process memory at Address: 0x{addr:X}\nWin32 Error: {e.Message}", e);
+            }
+        }
+
+        // Type-specific wrappers
+
+        public float ReadFloat(dword_ptr addr)
+        {
+            ReadBytes(addr, sizeof(float), out byte[] buffer);
             return BitConverter.ToSingle(buffer, 0);
         }
 
-        public void WriteFloat(dword_ptr ptr, float val)
+        public void WriteFloat(dword_ptr addr, float val)
         {
-            IntPtr hProc;
+            WriteBytes(addr, BitConverter.GetBytes(val));
+        }
 
-            try { hProc = OpenProcess(WRITE, false, pid); }
-            catch (Exception e) { throw new Exception(String.Format("Failed to open the process handle during a WriteFloat statement;\n{0}", e.Message)); }
+        public int ReadInt(dword_ptr addr)
+        {
+            ReadBytes(addr, sizeof(int), out byte[] buffer);
+            return BitConverter.ToInt32(buffer, 0);
+        }
 
-            if (hProc != IntPtr.Zero)
-            {
-                try { WriteProcessMemory(hProc, ptr, BitConverter.GetBytes(val), sizeof(float), 0); }
-                catch (Exception e) { throw new Exception(String.Format("Failed to write to process memory during a WriteFloat statement; Address = {0:X}\nWin32 Error: {1}", ptr, e.Message)); }
-
-                CloseHandle(hProc);
-            }
+        public void WriteInt(dword_ptr addr, int val)
+        {
+            WriteBytes(addr, BitConverter.GetBytes(val));
         }
 
         #endregion
