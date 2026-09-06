@@ -41,20 +41,13 @@ namespace MultiCoD_FoV_Changer
     {
         #region constants
 
-        public const string c_toolVer = "4.00.17.0";
+        public const string c_toolVer = "4.00.17.1";
 
         public const float c_FoV = 65f;
         public const float c_FoV_lowerLimit = 65f;
 
-#if ESL
-        public const float c_FoV_upperLimit = 90f;
-        public const string c_checkURL = "http://agentrevghostsfovesl.crabdance.com/";
-#else
         public const float c_FoV_upperLimit = 100f;
-        public const string c_checkURL = "http://agentrevghostsfov.crabdance.com/";
-#endif
-
-        public const byte c_pOffset = 0x10;
+        public const string c_checkURL = "http://agentrevcodfov.crabdance.com/";
 
         public const bool c_doBeep = true;
         public const bool c_updateNotify = true;
@@ -68,7 +61,7 @@ namespace MultiCoD_FoV_Changer
         static string settingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), Constants.c_settingsDirName);
         static string settingsFile = Path.Combine(settingsPath, Constants.c_settingsFileName);
 
-        dword_ptr pFoV;
+        dword_ptr pFoV = 0;
         float fFoV;
         bool doBeep;
         bool updateNotify;
@@ -103,10 +96,9 @@ namespace MultiCoD_FoV_Changer
         private HttpWebRequest request;
         private bool requestSent;
         private Process proc = null;
-        private Memory mem = null;
 
-        SoundPlayer sndGameFound = new SoundPlayer(Assembly.GetExecutingAssembly().GetManifestResourceStream(Assembly.GetExecutingAssembly().GetName().Name + ".Resources.gamefound.wav"));
-        SoundPlayer sndGameLost = new SoundPlayer(Assembly.GetExecutingAssembly().GetManifestResourceStream(Assembly.GetExecutingAssembly().GetName().Name + ".Resources.gamelost.wav"));
+        SoundPlayer sndGameFound => new SoundPlayer(GetType().Assembly.GetManifestResourceStream($"{GetType().Namespace}.Resources.gamefound.wav"));
+        SoundPlayer sndGameLost => new SoundPlayer(GetType().Assembly.GetManifestResourceStream($"{GetType().Namespace}.Resources.gamelost.wav"));
 
         bool isRunning(bool init)
         {
@@ -137,17 +129,19 @@ namespace MultiCoD_FoV_Changer
                     if (init)
                     {
                         proc = procs[0];
-
+#if !DEBUG
                         try
                         {
-                            mem = new Memory(Constants.c_cVar, proc.Id, Constants.c_baseAddr, Constants.c_memReadRange, c_pOffset);
+#endif
+                            Memory.Init(proc.Id, (dword_ptr)proc.MainModule.BaseAddress);
+#if !DEBUG
                         }
                         catch (Exception ex)
                         {
                             ErrMessage(ex);
                             Application.Exit();
                         }
-
+#endif
                         TimerVerif.Start();
                     }
                     return true;
@@ -163,38 +157,14 @@ namespace MultiCoD_FoV_Changer
             TimerHoldKey.Interval = 350;
         }
 
-        bool isOffsetWrong(dword_ptr ptr)
-        {
-            for (int i = 0x20; i < 0x30; i += 0x10)
-            {
-                //MessageBox.Show(ReadFloat(Increment(ptr, i)).ToString());
-                try
-                {
-                    if (mem.ReadFloat((ulong)(ptr + (dword_ptr)i)) != c_FoV)
-                        return true;
-                }
-                catch (Exception ex)
-                {
-                    ErrMessage(ex);
-                    Application.Exit();
-                }
-            }
-
-            return false;
-        }
-
         private Keys currentKey;
 
         //#####################################################################################################################
-        #endregion
+#endregion
 
         public MainForm()
         {
             InitializeComponent();
-
-#if ESL
-            this.Text = "ESL MultiCoD FoV Changer";
-#endif
 
             saveSettings = false;
             InitFovChanger();
@@ -242,11 +212,9 @@ namespace MultiCoD_FoV_Changer
                                 {
                                     SetFoV(float.Parse(varValue));
                                 }
-                                else if (varName == "FoVOffset" || varName == "RelativeFoVOffset")
+                                else if (varName == "FoVOffset")
                                 {
-                                    dword_ptr tmp = dword_ptr.Parse(varValue, NumberStyles.AllowHexSpecifier);
-                                    if (tmp > Constants.c_baseAddr)
-                                        pFoV = (dword_ptr)(varName == "RelativeFoVOffset" ? Constants.c_baseAddr : 0) + tmp;
+                                    pFoV = dword_ptr.Parse(varValue, NumberStyles.AllowHexSpecifier);
                                 }
                                 else if (varName == "UpdateNotify")
                                 {
@@ -282,9 +250,6 @@ namespace MultiCoD_FoV_Changer
                 if (sr != null)
                     sr.Close();
             }
-
-            if (checkVer != c_toolVer)
-                pFoV = Constants.c_pFoV;
 
             UpdateCheck();
 
@@ -342,7 +307,6 @@ namespace MultiCoD_FoV_Changer
             settingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), Constants.c_settingsDirName);
             settingsFile = Path.Combine(settingsPath, Constants.c_settingsFileName);
 
-            pFoV = Constants.c_pFoV;
             fFoV = c_FoV;
             doBeep = c_doBeep;
             updateNotify = c_updateNotify;
@@ -390,8 +354,8 @@ namespace MultiCoD_FoV_Changer
 
             try
             {
-                if (mem != null && isRunning(false) && writeAllowed)
-                    mem.WriteFloat(pFoV, reset ? c_FoV : fFoV);
+                if (proc != null && isRunning(false) && writeAllowed)
+                    Memory.WriteFloat(pFoV, reset ? c_FoV : fFoV);
             }
             catch (Exception ex)
             {
@@ -431,8 +395,8 @@ namespace MultiCoD_FoV_Changer
                 sndGameLost.PlaySync();
 
             writeAllowed = false;
-            mem = null;
             proc = null;
+            Memory.Reset();
 
             SetFoV(-1);
         }
@@ -617,13 +581,13 @@ namespace MultiCoD_FoV_Changer
         {
             try
             {
-                if (mem != null && isRunning(false))
+                if (proc != null && isRunning(false))
                 {
-                    float readValue = mem.ReadFloat(pFoV);
+                    float readValue = Memory.ReadFloat(pFoV);
 
                     if (readValue != fFoV && readValue >= c_FoV_lowerLimit)
                     {
-                        mem.WriteFloat(pFoV, fFoV);
+                        Memory.WriteFloat(pFoV, fFoV);
                     }
                 }
             }
@@ -641,82 +605,37 @@ namespace MultiCoD_FoV_Changer
 
         private void TimerVerif_Tick(object sender, EventArgs e)
         {
-            if (proc != null && mem != null && isRunning(false))
+            if (proc != null && isRunning(false))
             {
                 proc.Refresh();
-
+#if !DEBUG
                 try
                 {
-                    if (proc.PagedMemorySize64 > 0x2000000)
+#endif
+                    if (proc.WorkingSet64 > Constants.c_memReadRange)
                     {
-                        byte step = 0;
-
+                        int step = 0;
+#if !DEBUG
                         try
                         {
-                            mem.FindDvarAddress(ref pFoV, ref step);
-
-                            if (!isOffsetWrong(pFoV)) progStart();
-                            else if (proc.PeakWorkingSet64 > Constants.c_memSearchRange)
-                            {
-                                TimerVerif.Stop();
-                                TimerCheck.Stop();
-
-                                //bool offsetFound = false;
-
-                                //int ptrSize = IntPtr.Size * 4;
-                                /*for (int i = -0x50000; i < 0x50000 && !offsetFound; i += 16)
-                                {
-                                    if (mem.ReadFloat(true, pFoV + i) == 65f && !isOffsetWrong(pFoV + i))
-                                    {
-                                        pFoV += i;
-                                        offsetFound = true;
-                                    }
-
-                                    if (i % 50000 == 0)
-                                    {
-                                        label1.Text = i.ToString();
-                                        Update();
-                                    }
-                                }*/
-
-                                //Console.Beep(5000, 100);
-
-                                //MessageBox.Show("find " + pFoV.ToString("X8"));
-                                if (isRunning(false) && !mem.FindDvarAddress(ref pFoV, ref step))
-                                {
-                                    string memory = BitConverter.ToString(BitConverter.GetBytes(mem.ReadFloat(pFoV)));
-
-                                    MessageBox.Show(this, "The memory research pattern wasn't able to find the FoV offset in " + proc.ProcessName + ".exe.\n" +
-                                                          "Please look for an updated version of this FoV Changer tool.\n\n" +
-                                                          "If you believe this might be a bug, please send me an email at agentrevo@gmail.com, and include a screenshot of this:\n" +
-                                                          "\n" + c_toolVer +
-                                                          "\nWorking Set: 0x" + proc.WorkingSet64.ToString("X8") +
-                                                          "\nPaged Memory: 0x" + proc.PagedMemorySize64.ToString("X8") +
-                                                          "\nVirtual Memory: 0x" + proc.VirtualMemorySize64.ToString("X8") +
-                                                          "\nStep: " + step.ToString() +
-                                                          "\nFoV pointer: 0x" + (pFoV - c_pOffset).ToString("X8") + " = " + memory,
-                                                          "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-
-                                    pFoV = Constants.c_pFoV;
-                                    Application.Exit();
-                                }
-                                else
-                                {
-                                    //Console.Beep(5000, 100);
-                                    SaveSettings();
-                                    proc = null;
-                                    TimerCheck.Start();
-                                }
-                            }
+#endif
+                        if (Memory.FindDvarAddress("cg_fov", out pFoV, out step))
+                        {
+                            progStart();
+                        }
+#if !DEBUG
                         }
                         catch (Exception ex)
                         {
                             ErrMessage(ex);
-                            Application.Exit();
+                            Application.Exit(); 
                         }
+#endif
                     }
+#if !DEBUG
                 }
                 catch (InvalidOperationException) { }
+#endif
             }
         }
 
@@ -775,9 +694,9 @@ namespace MultiCoD_FoV_Changer
 
                         if (chkUpdate.Checked && updateNotify)
                         {
-                            MessageBox.Show(this, "Update v" + dataVer + " is available at MapModNews.com\nClicking the \"Help\" button below will take you to the download page." + (!String.IsNullOrEmpty(dataInfo) ? "\n\nInfos:\n" + dataInfo : ""),
+                            MessageBox.Show(this, "Update v" + dataVer + " is available on GitHub.\nClicking the \"Help\" button below will take you to the download page." + (!String.IsNullOrEmpty(dataInfo) ? "\n\nInfos:\n" + dataInfo : ""),
                                                   "Update available", MessageBoxButtons.OK, MessageBoxIcon.Information,
-                                                  MessageBoxDefaultButton.Button1, 0, (!String.IsNullOrEmpty(dataDownloadLink) ? dataDownloadLink : "http://ghostsfov.ftp.sh/"));
+                                                  MessageBoxDefaultButton.Button1, 0, (!String.IsNullOrEmpty(dataDownloadLink) ? dataDownloadLink : "https://github.com/AgentRev/CoD-FoV-Changers/releases"));
 
                             lblUpdateAvail.Text = "Update v" + dataVer + " available";
                             lblUpdateAvail.Enabled = true;
@@ -806,7 +725,7 @@ namespace MultiCoD_FoV_Changer
             else TimerBlink.Stop();
         }
 
-        #endregion
+#endregion
 
         #region events
 
