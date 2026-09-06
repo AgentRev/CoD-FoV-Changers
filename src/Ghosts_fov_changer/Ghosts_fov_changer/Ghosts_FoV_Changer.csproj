@@ -109,7 +109,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\codghosts_banner.jpg" />
     <EmbeddedResource Include="Resources\gamefound.wav" />
     <EmbeddedResource Include="Resources\gamelost.wav" />
   </ItemGroup>

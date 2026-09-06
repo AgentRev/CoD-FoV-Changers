@@ -62,9 +62,7 @@ namespace Ghosts_FoV_Changer
             this.btnKeyReset = new System.Windows.Forms.Button();
             this.chkHotkeys = new System.Windows.Forms.CheckBox();
             this.ToolTipReset = new System.Windows.Forms.ToolTip(this.components);
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.numFoV)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
             // TimerHoldKey
@@ -319,21 +317,11 @@ namespace Ghosts_FoV_Changer
             this.chkHotkeys.UseVisualStyleBackColor = true;
             this.chkHotkeys.CheckedChanged += new System.EventHandler(this.chkHotkeys_CheckedChanged);
             // 
-            // pictureBox1
-            // 
-            this.pictureBox1.Image = global::Ghosts_FoV_Changer.Properties.Resources.codghosts_banner;
-            this.pictureBox1.Location = new System.Drawing.Point(18, 0);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(258, 43);
-            this.pictureBox1.TabIndex = 21;
-            this.pictureBox1.TabStop = false;
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(294, 327);
-            this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.chkHotkeys);
             this.Controls.Add(this.btnKeyReset);
             this.Controls.Add(this.lblResetDefault);
@@ -360,7 +348,6 @@ namespace Ghosts_FoV_Changer
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.MouseClick += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseClick);
             ((System.ComponentModel.ISupportInitialize)(this.numFoV)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -392,7 +379,6 @@ namespace Ghosts_FoV_Changer
         private System.Windows.Forms.Button btnKeyReset;
         private System.Windows.Forms.CheckBox chkHotkeys;
         private System.Windows.Forms.ToolTip ToolTipReset;
-        private System.Windows.Forms.PictureBox pictureBox1;
 
     }
 }
