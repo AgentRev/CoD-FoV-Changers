@@ -2,9 +2,13 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("MultiCoD FoV Changer")]
-[assembly: AssemblyDescription("Field of View Changer for Call of Duty games")]
+[assembly: AssemblyDescription("Field of View Changer for various Call of Duty games")]
+[assembly: AssemblyConfiguration("")]
+[assembly: AssemblyCompany("AgentRev")]
 [assembly: AssemblyProduct("MultiCoD FoV Changer")]
 [assembly: AssemblyCopyright("AgentRev & Activision")]
+[assembly: AssemblyTrademark("Activision")]
+[assembly: AssemblyCulture("")]
 
 [assembly: ComVisible(false)]
 
