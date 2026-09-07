@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -43,8 +45,9 @@ namespace MultiCoD_FoV_Changer
 
         static dword_ptr baseAddr;
         static IntPtr hProc;
-        static int ptrSize;
+        static int dvarPtrSize;
         static dword_ptr dvarValueOffset;
+        public static Dictionary<string, dword_ptr> dvarAddresses = new Dictionary<string, dword_ptr>();
 
         #endregion
 
@@ -77,7 +80,7 @@ namespace MultiCoD_FoV_Changer
             try
             {
                 IsWow64Process(hProc, out bool isX86);
-                ptrSize = isX86 ? sizeof(Int32) : sizeof(Int64);
+                dvarPtrSize = isX86 ? sizeof(Int32) : sizeof(Int64);
             }
             catch (Exception e)
             {
@@ -93,6 +96,8 @@ namespace MultiCoD_FoV_Changer
             }
 
             hProc = IntPtr.Zero;
+            dvarValueOffset = 0;
+            dvarAddresses.Clear();
         }
 
         private static int ReadBytes(dword_ptr addr, int length, out byte[] buffer)
@@ -123,119 +128,124 @@ namespace MultiCoD_FoV_Changer
             }
         }
 
-        public static bool FindDvarAddress(string name, out dword_ptr addr, out int step)
+        public static bool FindDvarAddresses(params string[] names)
         {
-            addr = 0;
-            step = 0;
-            bool isFound = false;
-            byte[] nameBytes = Encoding.ASCII.GetBytes(name + '\0');
+            if (hProc == IntPtr.Zero) return false;
 
-            if (dvarValueOffset == 0 && name != "cg_fov")
+            // We need cg_fov always on the first call, to compute the dvarValueOffset
+            string[] dvarNames = (dvarValueOffset == 0 && !names.Contains("cg_fov")) ? names.Concat(new[] { "cg_fov" }).ToArray() : names;
+
+            bool allFound = true;
+            var nameAddressesList = new List<dword_ptr>(new dword_ptr[dvarNames.Length]);
+            List<int> nameIndexesLeft = Enumerable.Range(0, dvarNames.Length).ToList();
+
+            ReadBytes(baseAddr, Constants.c_memReadRange, out byte[] buffer);
+
+            int iBufMax = buffer.Length - dvarNames.Select(w => w?.Length ?? 0).DefaultIfEmpty(0).Max() - 1;
+
+            // Search game memory to find addresses of dvar name strings
+            for (int iBuf = 0; iBuf <= iBufMax && nameIndexesLeft.Count > 0; iBuf += sizeof(int))
             {
-                throw new Exception("Must call FindDvarAddress for cg_fov first and foremost to compute the dvarValueOffset");
-            }
-
-            if (hProc != IntPtr.Zero)
-            {
-                step = 1;
-                ReadBytes(baseAddr, Constants.c_memReadRange, out byte[] buffer);
-
-                step = 2;
-                dword_ptr dvarNameAddr = 0;
-                int maxOffset = buffer.Length - nameBytes.Length;
-
-                // Search dvar name
-                for (int i = 0; i < maxOffset; i += sizeof(int))
+                for (int n = nameIndexesLeft.Count - 1; n >= 0; n--)
                 {
+                    ref var name = ref dvarNames[nameIndexesLeft[n]];
+
+                    // Equivalent to "if (strcmp(name, &buffer[iBuf]) == 0)"
+
                     bool match = true;
-                    for (int j = 0; j < nameBytes.Length; j++)
+                    for (int iName = 0; iName < name.Length; iName++)
                     {
-                        if (buffer[i + j] != nameBytes[j])
+                        if (buffer[iBuf + iName] != name[iName])
                         {
                             match = false;
                             break;
                         }
                     }
 
-                    if (match)
+                    if (match && buffer[iBuf + name.Length] == '\0')
                     {
-                        step = 3;
-                        dvarNameAddr = baseAddr + (dword_ptr)i;
-                        break;
-                    }
-                }
-
-                if (dvarNameAddr > 0)
-                {
-                    step = 4;
-                    int startIndex = (int)(dvarNameAddr - baseAddr);
-                    int maxIndex = buffer.Length - sizeof(dword_ptr);
-                    var toUInt = (ptrSize == sizeof(int)) ? (Func<byte[], int, ulong>)((bytes, start) => BitConverter.ToUInt32(bytes, start)) : BitConverter.ToUInt64;
-
-                    // Search dvar structure
-                    for (int i = startIndex; i <= maxIndex; i += sizeof(int))
-                    {
-                        if (toUInt(buffer, i) == dvarNameAddr)
-                        {
-                            step = 5;
-                            addr = baseAddr + (dword_ptr)i + dvarValueOffset;
-                            isFound = true;
-                            break;
-                        }
-                    }
-                }
-
-                // Figure out the value offset via dvar_t's "DvarValue reset" from cg_fov
-                if (addr > 0 && dvarValueOffset == 0 && name == "cg_fov")
-                {
-                    step = 6;
-                    int iDvarStruct = (int)(addr - baseAddr);
-
-                    // "DvarValue reset" should normally always be within this range
-                    for (int iValOffset = 0x3C; iValOffset >= 0x28; iValOffset -= sizeof(int))
-                    {
-                        if (BitConverter.ToSingle(buffer, iDvarStruct + iValOffset) == 65f)
-                        {
-                            step = 7;
-                            dvarValueOffset = (dword_ptr)(iValOffset - 0x20);
-                            addr += dvarValueOffset;
-                            break;
-                        }
-                    }
-
-                    if (dvarValueOffset == 0)
-                    {
-                        step = 8;
-                        isFound = false; // failure
+                        nameAddressesList[n] = baseAddr + (dword_ptr)iBuf;
+                        nameIndexesLeft.RemoveAt(n);
                     }
                 }
             }
 
-            return isFound;
+            var nameAddressesArr = nameAddressesList.ToArray();
+            nameIndexesLeft = Enumerable.Range(0, dvarNames.Length).ToList();
+            iBufMax = buffer.Length - dvarPtrSize - 1;
+            
+            var toUInt = (dvarPtrSize == sizeof(int)) ? (Func<byte[], int, ulong>)((bytes, start) => BitConverter.ToUInt32(bytes, start)) : BitConverter.ToUInt64;
+
+            // Search game memory to find the dvar structs via their name pointers
+            for (int iBuf = (int)(nameAddressesArr.Max() - baseAddr); iBuf <= iBufMax && nameIndexesLeft.Count > 0; iBuf += sizeof(int))
+            {
+                for (int n = nameIndexesLeft.Count - 1; n >= 0; n--)
+                {
+                    ref var nameAddr = ref nameAddressesArr[nameIndexesLeft[n]];
+
+                    if (toUInt(buffer, iBuf) == nameAddr)
+                    {
+                        dvarAddresses[dvarNames[nameIndexesLeft[n]]] = baseAddr + (dword_ptr)iBuf + dvarValueOffset;
+                        nameIndexesLeft.RemoveAt(n);
+                    }
+                }
+            }
+
+            // Figure out the value offset via struct dvar_t's "DvarValue reset" from cg_fov
+            if (dvarValueOffset == 0 && dvarAddresses.TryGetValue("cg_fov", out var cgFovStructAddr) && cgFovStructAddr > baseAddr)
+            {
+                int iDvarStruct = (int)(cgFovStructAddr - baseAddr);
+
+                // "DvarValue reset" should normally always be within this range for IW3/4/5/6 and T4/5/6 engines, hopefully S1 as well
+                for (int offset = 0x3C; offset >= 0x28; offset -= sizeof(int))
+                {
+                    if (BitConverter.ToSingle(buffer, iDvarStruct + offset) == 65f)
+                    {
+                        dvarValueOffset = (dword_ptr)(offset - 0x20); // infer "DvarValue current" offset based on "DvarValue reset", their gap is always 0x20 for these engines
+                        break;
+                    }
+                }
+
+                if (dvarValueOffset > 0)
+                {
+                    // Re-adjust all offsets
+                    foreach (var key in dvarAddresses.Keys.ToList())
+                    {
+                        dvarAddresses[key] += dvarValueOffset;
+                    }
+                }
+            }
+
+            if (dvarValueOffset == 0) // failure
+            {
+                allFound = false;
+            }
+
+            return allFound;
         }
 
         // Type-specific wrappers
 
-        public static float ReadFloat(dword_ptr addr)
+        public static float ReadFloat(string name)
         {
-            ReadBytes(addr, sizeof(float), out byte[] buffer);
+            ReadBytes(dvarAddresses[name], sizeof(float), out byte[] buffer);
             return BitConverter.ToSingle(buffer, 0);
         }
 
-        public static void WriteFloat(dword_ptr addr, float val)
+        public static void WriteFloat(string name, float val)
         {
-            WriteBytes(addr, BitConverter.GetBytes(val));
+            WriteBytes(dvarAddresses[name], BitConverter.GetBytes(val));
         }
 
-        public static int ReadInt(dword_ptr addr)
+        public static int ReadInt(string name)
         {
-            ReadBytes(addr, sizeof(int), out byte[] buffer);
+            ReadBytes(dvarAddresses[name], sizeof(int), out byte[] buffer);
             return BitConverter.ToInt32(buffer, 0);
         }
 
-        public static void WriteInt(dword_ptr addr, int val)
+        public static void WriteInt(string name, int val)
         {
-            WriteBytes(addr, BitConverter.GetBytes(val));
+            WriteBytes(dvarAddresses[name], BitConverter.GetBytes(val));
         }
 
         #endregion

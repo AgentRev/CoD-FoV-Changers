@@ -361,7 +361,7 @@ namespace MultiCoD_FoV_Changer
             try
             {
                 if (proc != null && isRunning(false) && writeAllowed)
-                    Memory.WriteFloat(pFoV, reset ? c_FoV : fFoV);
+                    Memory.WriteFloat("cg_fov", reset ? c_FoV : fFoV);
             }
             catch (Exception ex)
             {
@@ -596,11 +596,11 @@ namespace MultiCoD_FoV_Changer
             {
                 if (proc != null && isRunning(false))
                 {
-                    float readValue = Memory.ReadFloat(pFoV);
+                    float readValue = Memory.ReadFloat("cg_fov");
 
                     if (readValue != fFoV && readValue >= c_FoV_lowerLimit)
                     {
-                        Memory.WriteFloat(pFoV, fFoV);
+                        Memory.WriteFloat("cg_fov", fFoV);
                     }
                 }
             }
@@ -632,8 +632,9 @@ namespace MultiCoD_FoV_Changer
                         try
                         {
 #endif
-                        if (Memory.FindDvarAddress("cg_fov", out pFoV, out step))
+                        if (Memory.FindDvarAddresses("cg_fov"))
                         {
+                            pFoV = Memory.dvarAddresses["cg_fov"];
                             progStart();
                         }
 #if !DEBUG
