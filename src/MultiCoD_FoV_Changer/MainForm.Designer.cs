@@ -45,7 +45,6 @@ namespace MultiCoD_FoV_Changer
             this.chkBeep = new System.Windows.Forms.CheckBox();
             this.TimerVerif = new System.Windows.Forms.Timer(this.components);
             this.numFoV = new System.Windows.Forms.NumericUpDown();
-            this.btnExit = new System.Windows.Forms.Button();
             this.btnAbout = new System.Windows.Forms.Button();
             this.btnReset = new System.Windows.Forms.Button();
             this.lblVersion = new System.Windows.Forms.Label();
@@ -62,7 +61,11 @@ namespace MultiCoD_FoV_Changer
             this.btnKeyReset = new System.Windows.Forms.Button();
             this.chkHotkeys = new System.Windows.Forms.CheckBox();
             this.ToolTipReset = new System.Windows.Forms.ToolTip(this.components);
+            this.lblGameStatus = new System.Windows.Forms.Label();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.btnExit = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.numFoV)).BeginInit();
+            this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // TimerHoldKey
@@ -79,7 +82,7 @@ namespace MultiCoD_FoV_Changer
             // 
             this.lblFoV.AutoSize = true;
             this.lblFoV.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblFoV.Location = new System.Drawing.Point(63, 60);
+            this.lblFoV.Location = new System.Drawing.Point(44, 60);
             this.lblFoV.Name = "lblFoV";
             this.lblFoV.Size = new System.Drawing.Size(99, 20);
             this.lblFoV.TabIndex = 0;
@@ -96,9 +99,8 @@ namespace MultiCoD_FoV_Changer
             this.chkBeep.Checked = true;
             this.chkBeep.CheckState = System.Windows.Forms.CheckState.Checked;
             this.chkBeep.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.chkBeep.Location = new System.Drawing.Point(134, 111);
+            this.chkBeep.Location = new System.Drawing.Point(29, 111);
             this.chkBeep.Name = "chkBeep";
-            this.chkBeep.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
             this.chkBeep.Size = new System.Drawing.Size(130, 20);
             this.chkBeep.TabIndex = 5;
             this.chkBeep.Text = "Beep on success";
@@ -113,10 +115,10 @@ namespace MultiCoD_FoV_Changer
             // numFoV
             // 
             this.numFoV.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.numFoV.DecimalPlaces = 2;
+            this.numFoV.DecimalPlaces = 1;
             this.numFoV.Enabled = false;
             this.numFoV.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.numFoV.Location = new System.Drawing.Point(171, 61);
+            this.numFoV.Location = new System.Drawing.Point(152, 61);
             this.numFoV.Maximum = new decimal(new int[] {
             90,
             0,
@@ -138,21 +140,10 @@ namespace MultiCoD_FoV_Changer
             0});
             this.numFoV.ValueChanged += new System.EventHandler(this.numFoV_ValueChanged);
             // 
-            // btnExit
-            // 
-            this.btnExit.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnExit.Location = new System.Drawing.Point(195, 280);
-            this.btnExit.Name = "btnExit";
-            this.btnExit.Size = new System.Drawing.Size(70, 30);
-            this.btnExit.TabIndex = 20;
-            this.btnExit.Text = "Exit";
-            this.btnExit.UseVisualStyleBackColor = true;
-            this.btnExit.Click += new System.EventHandler(this.btnExit_Click);
-            // 
             // btnAbout
             // 
             this.btnAbout.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnAbout.Location = new System.Drawing.Point(115, 280);
+            this.btnAbout.Location = new System.Drawing.Point(132, 280);
             this.btnAbout.Name = "btnAbout";
             this.btnAbout.Size = new System.Drawing.Size(70, 30);
             this.btnAbout.TabIndex = 19;
@@ -163,7 +154,7 @@ namespace MultiCoD_FoV_Changer
             // btnReset
             // 
             this.btnReset.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnReset.Location = new System.Drawing.Point(241, 60);
+            this.btnReset.Location = new System.Drawing.Point(222, 60);
             this.btnReset.Name = "btnReset";
             this.btnReset.Size = new System.Drawing.Size(24, 24);
             this.btnReset.TabIndex = 3;
@@ -174,13 +165,11 @@ namespace MultiCoD_FoV_Changer
             // 
             // lblVersion
             // 
-            this.lblVersion.AutoSize = true;
-            this.lblVersion.Enabled = false;
             this.lblVersion.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblVersion.Location = new System.Drawing.Point(26, 287);
+            this.lblVersion.Location = new System.Drawing.Point(12, 280);
             this.lblVersion.MinimumSize = new System.Drawing.Size(82, 0);
             this.lblVersion.Name = "lblVersion";
-            this.lblVersion.Size = new System.Drawing.Size(82, 16);
+            this.lblVersion.Size = new System.Drawing.Size(82, 30);
             this.lblVersion.TabIndex = 0;
             this.lblVersion.Text = "v1.x.xxx.x";
             this.lblVersion.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -202,7 +191,7 @@ namespace MultiCoD_FoV_Changer
             this.lblLink.BackColor = System.Drawing.SystemColors.Control;
             this.lblLink.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblLink.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
-            this.lblLink.Location = new System.Drawing.Point(39, 254);
+            this.lblLink.Location = new System.Drawing.Point(43, 254);
             this.lblLink.Margin = new System.Windows.Forms.Padding(0);
             this.lblLink.MaximumSize = new System.Drawing.Size(260, 0);
             this.lblLink.Name = "lblLink";
@@ -219,13 +208,11 @@ namespace MultiCoD_FoV_Changer
             this.chkUpdate.Checked = true;
             this.chkUpdate.CheckState = System.Windows.Forms.CheckState.Checked;
             this.chkUpdate.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.chkUpdate.Location = new System.Drawing.Point(66, 132);
+            this.chkUpdate.Location = new System.Drawing.Point(29, 132);
             this.chkUpdate.Name = "chkUpdate";
-            this.chkUpdate.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
             this.chkUpdate.Size = new System.Drawing.Size(198, 20);
             this.chkUpdate.TabIndex = 6;
             this.chkUpdate.Text = "Notify when update available";
-            this.chkUpdate.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.chkUpdate.UseVisualStyleBackColor = true;
             this.chkUpdate.CheckedChanged += new System.EventHandler(this.chkUpdate_CheckedChanged);
             // 
@@ -307,21 +294,52 @@ namespace MultiCoD_FoV_Changer
             // chkHotkeys
             // 
             this.chkHotkeys.AutoSize = true;
+            this.chkHotkeys.Checked = true;
+            this.chkHotkeys.CheckState = System.Windows.Forms.CheckState.Checked;
             this.chkHotkeys.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.chkHotkeys.Location = new System.Drawing.Point(141, 90);
+            this.chkHotkeys.Location = new System.Drawing.Point(29, 90);
             this.chkHotkeys.Name = "chkHotkeys";
-            this.chkHotkeys.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
-            this.chkHotkeys.Size = new System.Drawing.Size(123, 20);
+            this.chkHotkeys.Size = new System.Drawing.Size(119, 20);
             this.chkHotkeys.TabIndex = 4;
-            this.chkHotkeys.Text = "Disable hotkeys";
+            this.chkHotkeys.Text = "Enable hotkeys";
             this.chkHotkeys.UseVisualStyleBackColor = true;
             this.chkHotkeys.CheckedChanged += new System.EventHandler(this.chkHotkeys_CheckedChanged);
+            // 
+            // lblGameStatus
+            // 
+            this.lblGameStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblGameStatus.Location = new System.Drawing.Point(6, 11);
+            this.lblGameStatus.Name = "lblGameStatus";
+            this.lblGameStatus.Size = new System.Drawing.Size(258, 31);
+            this.lblGameStatus.TabIndex = 21;
+            this.lblGameStatus.Text = "Awaiting game...";
+            this.lblGameStatus.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.lblGameStatus);
+            this.groupBox1.Location = new System.Drawing.Point(12, 4);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(270, 48);
+            this.groupBox1.TabIndex = 22;
+            this.groupBox1.TabStop = false;
+            // 
+            // btnExit
+            // 
+            this.btnExit.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnExit.Location = new System.Drawing.Point(212, 280);
+            this.btnExit.Name = "btnExit";
+            this.btnExit.Size = new System.Drawing.Size(70, 30);
+            this.btnExit.TabIndex = 20;
+            this.btnExit.Text = "Exit";
+            this.btnExit.UseVisualStyleBackColor = true;
+            this.btnExit.Click += new System.EventHandler(this.btnExit_Click);
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(294, 327);
+            this.ClientSize = new System.Drawing.Size(294, 320);
             this.Controls.Add(this.chkHotkeys);
             this.Controls.Add(this.btnKeyReset);
             this.Controls.Add(this.lblResetDefault);
@@ -339,6 +357,7 @@ namespace MultiCoD_FoV_Changer
             this.Controls.Add(this.numFoV);
             this.Controls.Add(this.chkBeep);
             this.Controls.Add(this.lblFoV);
+            this.Controls.Add(this.groupBox1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
@@ -348,6 +367,7 @@ namespace MultiCoD_FoV_Changer
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.MouseClick += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseClick);
             ((System.ComponentModel.ISupportInitialize)(this.numFoV)).EndInit();
+            this.groupBox1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -362,7 +382,6 @@ namespace MultiCoD_FoV_Changer
         private System.Windows.Forms.CheckBox chkBeep;
         private System.Windows.Forms.Timer TimerVerif;
         private System.Windows.Forms.NumericUpDown numFoV;
-        private System.Windows.Forms.Button btnExit;
         private System.Windows.Forms.Button btnAbout;
         private System.Windows.Forms.Button btnReset;
         private System.Windows.Forms.Label lblVersion;
@@ -379,7 +398,9 @@ namespace MultiCoD_FoV_Changer
         private System.Windows.Forms.Button btnKeyReset;
         private System.Windows.Forms.CheckBox chkHotkeys;
         private System.Windows.Forms.ToolTip ToolTipReset;
-
+        private System.Windows.Forms.Label lblGameStatus;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.Button btnExit;
     }
 }
 

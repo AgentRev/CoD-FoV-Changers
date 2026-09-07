@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Media;
@@ -129,6 +130,7 @@ namespace MultiCoD_FoV_Changer
                     if (init)
                     {
                         proc = procs[0];
+                        lblGameStatus.Text = proc.ProcessName + ".exe";
 #if !DEBUG
                         try
                         {
@@ -220,9 +222,13 @@ namespace MultiCoD_FoV_Changer
                                 {
                                     chkUpdate.Checked = bool.Parse(varValue);
                                 }
-                                else if (varName == "DisableHotkeys")
+                                else if (varName == "EnableHotkeys")
                                 {
                                     chkHotkeys.Checked = bool.Parse(varValue);
+                                }
+                                else if (varName == "DisableHotkeys")
+                                {
+                                    chkHotkeys.Checked = !bool.Parse(varValue);
                                 }
                                 else if (varName == "HotkeyIncrease")
                                 {
@@ -276,7 +282,7 @@ namespace MultiCoD_FoV_Changer
                             sw.WriteLine("FoV=" + fFoV);
                             sw.WriteLine("FoVOffset=" + pFoV.ToString("x"));
                             sw.WriteLine("UpdateNotify=" + chkUpdate.Checked);
-                            sw.WriteLine("DisableHotkeys=" + chkHotkeys.Checked);
+                            sw.WriteLine("EnableHotkeys=" + chkHotkeys.Checked);
                             sw.WriteLine("HotkeyIncrease=" + (int)catchKeys[0]);
                             sw.WriteLine("HotkeyDecrease=" + (int)catchKeys[1]);
                             sw.WriteLine("HotkeyReset=" + (int)catchKeys[2]);
@@ -382,6 +388,9 @@ namespace MultiCoD_FoV_Changer
             UpdateNumBox();
             TimerUpdate.Start();
 
+            lblGameStatus.ForeColor = Color.ForestGreen;
+            lblGameStatus.Refresh();
+
             if (doBeep)
                 sndGameFound.PlaySync();
         }
@@ -391,6 +400,9 @@ namespace MultiCoD_FoV_Changer
             TimerVerif.Stop();
             TimerUpdate.Stop();
 
+            lblGameStatus.ForeColor = DefaultForeColor;
+            lblGameStatus.Refresh();
+
             if (writeAllowed && doBeep)
                 sndGameLost.PlaySync();
 
@@ -399,6 +411,7 @@ namespace MultiCoD_FoV_Changer
             Memory.Reset();
 
             SetFoV(-1);
+            lblGameStatus.Text = "Awaiting game...";
         }
 
         private long VersionNum(string data)
@@ -777,11 +790,14 @@ namespace MultiCoD_FoV_Changer
         private void btnAbout_Click(object sender, EventArgs e)
         {
             MessageBox.Show(this, this.Text + " v" + c_toolVer + "\n" +
-                                  "Made by AgentRev\n\n"+
+                                  "Made by AgentRev\n\n" +
+                                  "Compatible with:\n" +
+                                  "MW1 '07, WaW, MW2 '09, BO1, MW3 '11, BO2, Ghosts, AW\n\n" +
+                                  "Support email:\n" +
                                   "agentrevo@gmail.com\n",
                                   "About", MessageBoxButtons.OK, MessageBoxIcon.Information, 
                                   MessageBoxDefaultButton.Button1,
-                                  0, "mailto:agentrevo@gmail.com");
+                                  0, "https://github.com/AgentRev/CoD-FoV-Changers/issues");
 
         }
 
@@ -838,7 +854,7 @@ namespace MultiCoD_FoV_Changer
 
         private void chkHotkeys_CheckedChanged(object sender, EventArgs e)
         {
-            hotKeys = !chkHotkeys.Checked;
+            hotKeys = chkHotkeys.Checked;
             TimerReset();
             currentKey = Keys.None;
             SaveSettings();
