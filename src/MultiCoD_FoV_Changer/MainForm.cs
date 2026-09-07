@@ -130,7 +130,7 @@ namespace MultiCoD_FoV_Changer
                     if (init)
                     {
                         proc = procs[0];
-                        lblGameStatus.Text = proc.ProcessName + ".exe";
+                        lblGameStatus.Text = proc.ProcessName + ".exe 🕓";
 #if !DEBUG
                         try
                         {
@@ -388,6 +388,7 @@ namespace MultiCoD_FoV_Changer
             UpdateNumBox();
             TimerUpdate.Start();
 
+            lblGameStatus.Text = proc.ProcessName + ".exe ✔️";
             lblGameStatus.ForeColor = Color.ForestGreen;
             lblGameStatus.Refresh();
 
@@ -791,14 +792,11 @@ namespace MultiCoD_FoV_Changer
         private void btnAbout_Click(object sender, EventArgs e)
         {
             MessageBox.Show(this, this.Text + " v" + c_toolVer + "\n" +
-                                  "Made by AgentRev\n\n" +
-                                  "Compatible with:\n" +
-                                  "MW1 '07, WaW, MW2 '09, BO1, MW3 '11, BO2, Ghosts, AW\n\n" +
-                                  "Support email:\n" +
+                                  "Made by AgentRev\n" +
                                   "agentrevo@gmail.com\n",
                                   "About", MessageBoxButtons.OK, MessageBoxIcon.Information, 
-                                  MessageBoxDefaultButton.Button1,
-                                  0, "https://github.com/AgentRev/CoD-FoV-Changers/issues");
+                                  MessageBoxDefaultButton.Button1, 0,
+                                  "https://github.com/AgentRev/CoD-FoV-Changers/issues");
 
         }
 

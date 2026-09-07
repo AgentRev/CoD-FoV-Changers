@@ -15,7 +15,6 @@ namespace MultiCoD_FoV_Changer
             "s1_sp64_ship", "s1_mp64_ship", // AW ??? untested
         };
 
-        public const string c_cVar = "cg_fov";
         public const int c_memReadRange = 0x10000000; // first 256MB RAM
     }
 }

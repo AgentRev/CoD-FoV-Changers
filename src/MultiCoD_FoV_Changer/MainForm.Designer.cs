@@ -64,6 +64,7 @@ namespace MultiCoD_FoV_Changer
             this.lblGameStatus = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.btnExit = new System.Windows.Forms.Button();
+            this.ToolTipStatus = new System.Windows.Forms.ToolTip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.numFoV)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
@@ -80,13 +81,13 @@ namespace MultiCoD_FoV_Changer
             // 
             // lblFoV
             // 
-            this.lblFoV.AutoSize = true;
             this.lblFoV.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblFoV.Location = new System.Drawing.Point(44, 60);
+            this.lblFoV.Location = new System.Drawing.Point(12, 60);
             this.lblFoV.Name = "lblFoV";
-            this.lblFoV.Size = new System.Drawing.Size(99, 20);
+            this.lblFoV.Size = new System.Drawing.Size(131, 20);
             this.lblFoV.TabIndex = 0;
             this.lblFoV.Text = "Field of View";
+            this.lblFoV.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
             // TimerCheck
             // 
@@ -99,10 +100,10 @@ namespace MultiCoD_FoV_Changer
             this.chkBeep.Checked = true;
             this.chkBeep.CheckState = System.Windows.Forms.CheckState.Checked;
             this.chkBeep.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.chkBeep.Location = new System.Drawing.Point(29, 111);
+            this.chkBeep.Location = new System.Drawing.Point(29, 90);
             this.chkBeep.Name = "chkBeep";
             this.chkBeep.Size = new System.Drawing.Size(130, 20);
-            this.chkBeep.TabIndex = 5;
+            this.chkBeep.TabIndex = 4;
             this.chkBeep.Text = "Beep on success";
             this.chkBeep.UseVisualStyleBackColor = true;
             this.chkBeep.CheckedChanged += new System.EventHandler(this.chkBeep_CheckedChanged);
@@ -191,7 +192,7 @@ namespace MultiCoD_FoV_Changer
             this.lblLink.BackColor = System.Drawing.SystemColors.Control;
             this.lblLink.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblLink.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
-            this.lblLink.Location = new System.Drawing.Point(43, 254);
+            this.lblLink.Location = new System.Drawing.Point(43, 256);
             this.lblLink.Margin = new System.Windows.Forms.Padding(0);
             this.lblLink.MaximumSize = new System.Drawing.Size(260, 0);
             this.lblLink.Name = "lblLink";
@@ -208,10 +209,10 @@ namespace MultiCoD_FoV_Changer
             this.chkUpdate.Checked = true;
             this.chkUpdate.CheckState = System.Windows.Forms.CheckState.Checked;
             this.chkUpdate.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.chkUpdate.Location = new System.Drawing.Point(29, 132);
+            this.chkUpdate.Location = new System.Drawing.Point(29, 111);
             this.chkUpdate.Name = "chkUpdate";
             this.chkUpdate.Size = new System.Drawing.Size(198, 20);
-            this.chkUpdate.TabIndex = 6;
+            this.chkUpdate.TabIndex = 5;
             this.chkUpdate.Text = "Notify when update available";
             this.chkUpdate.UseVisualStyleBackColor = true;
             this.chkUpdate.CheckedChanged += new System.EventHandler(this.chkUpdate_CheckedChanged);
@@ -222,7 +223,7 @@ namespace MultiCoD_FoV_Changer
             this.lblUpdateAvail.Enabled = false;
             this.lblUpdateAvail.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblUpdateAvail.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(180)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.lblUpdateAvail.Location = new System.Drawing.Point(18, 228);
+            this.lblUpdateAvail.Location = new System.Drawing.Point(18, 234);
             this.lblUpdateAvail.Name = "lblUpdateAvail";
             this.lblUpdateAvail.Size = new System.Drawing.Size(258, 13);
             this.lblUpdateAvail.TabIndex = 12;
@@ -297,10 +298,10 @@ namespace MultiCoD_FoV_Changer
             this.chkHotkeys.Checked = true;
             this.chkHotkeys.CheckState = System.Windows.Forms.CheckState.Checked;
             this.chkHotkeys.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.chkHotkeys.Location = new System.Drawing.Point(29, 90);
+            this.chkHotkeys.Location = new System.Drawing.Point(29, 132);
             this.chkHotkeys.Name = "chkHotkeys";
             this.chkHotkeys.Size = new System.Drawing.Size(119, 20);
-            this.chkHotkeys.TabIndex = 4;
+            this.chkHotkeys.TabIndex = 6;
             this.chkHotkeys.Text = "Enable hotkeys";
             this.chkHotkeys.UseVisualStyleBackColor = true;
             this.chkHotkeys.CheckedChanged += new System.EventHandler(this.chkHotkeys_CheckedChanged);
@@ -314,6 +315,8 @@ namespace MultiCoD_FoV_Changer
             this.lblGameStatus.TabIndex = 21;
             this.lblGameStatus.Text = "Awaiting game...";
             this.lblGameStatus.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.ToolTipStatus.SetToolTip(this.lblGameStatus, "Start a mission or join a match! Compatible with:\nMW1 \'07, WaW, MW2 \'09, BO1, MW3" +
+        " \'11, BO2, Ghosts, AW");
             // 
             // groupBox1
             // 
@@ -401,6 +404,7 @@ namespace MultiCoD_FoV_Changer
         private System.Windows.Forms.Label lblGameStatus;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Button btnExit;
+        private System.Windows.Forms.ToolTip ToolTipStatus;
     }
 }
 
