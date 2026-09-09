@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Eventing.Reader;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -46,8 +47,8 @@ namespace MultiCoD_FoV_Changer
 
         public const float c_FoV = 65f;
         public const float c_FoV_lowerLimit = 65f;
-
         public const float c_FoV_upperLimit = 100f;
+
         public const string c_checkURL = "http://agentrevcodfov.crabdance.com/";
 
         public const bool c_doBeep = true;
@@ -64,6 +65,7 @@ namespace MultiCoD_FoV_Changer
 
         dword_ptr pFoV = 0;
         float fFoV;
+        int maxFPS;
         bool doBeep;
         bool updateNotify;
         bool hotKeys;
@@ -219,6 +221,10 @@ namespace MultiCoD_FoV_Changer
                                     // unused, overwritten every time
                                     pFoV = dword_ptr.Parse(varValue, NumberStyles.AllowHexSpecifier);
                                 }
+                                else if (varName == "MaxFPS")
+                                {
+                                    SetFPS(int.Parse(varValue));
+                                }
                                 else if (varName == "UseFovScale")
                                 {
                                     chkFovScale.Checked = bool.Parse(varValue);
@@ -282,6 +288,7 @@ namespace MultiCoD_FoV_Changer
                             sw.WriteLine("Beep=" + chkBeep.Checked);
                             sw.WriteLine("FoV=" + fFoV);
                             sw.WriteLine("FoVOffset=" + pFoV.ToString("x"));
+                            sw.WriteLine("MaxFPS=" + maxFPS);
                             sw.WriteLine("UseFovScale=" + chkFovScale.Checked);
                             sw.WriteLine("UpdateNotify=" + chkUpdate.Checked);
                             sw.WriteLine("EnableHotkeys=" + chkHotkeys.Checked);
@@ -377,8 +384,6 @@ namespace MultiCoD_FoV_Changer
             }
             else
                 SaveSettings();
-
-
 #if !DEBUG
             try
             {
@@ -402,10 +407,67 @@ namespace MultiCoD_FoV_Changer
                 SaveSettings();
             }
         }
+        private void WriteFPS(int val)
+        {
+            if (proc != null && isRunning(false))
+            {
+                if (val >= 0)
+                {
+                    Memory.WriteInt("com_maxfps", val);
+                }
+                else
+                {
+                    Memory.ResetDvar("com_maxfps");
+                }
+            }
+        }
+
+        private void SetFPS(int val)
+        {
+            bool reset = val < 0;
+
+            if (!reset)
+            {
+                if (val < numFPS.Minimum)
+                    maxFPS = Convert.ToInt32(numFPS.Minimum);
+                else if (val > numFPS.Maximum)
+                    maxFPS = Convert.ToInt32(numFPS.Maximum);
+                else
+                    maxFPS = val;
+            }
+            else
+                SaveSettings();
+#if !DEBUG
+            try
+            {
+#endif
+                if (proc != null && isRunning(false) && writeAllowed)
+                {
+                    WriteFPS(reset ? -1 : maxFPS);
+                }
+#if !DEBUG
+            }
+            catch (Exception ex)
+            {
+                ErrMessage(ex);
+                Application.Exit();
+            }
+#endif
+
+            if (!reset)
+            {
+                numFPS.Value = Convert.ToDecimal(maxFPS);
+                SaveSettings();
+            }
+        }
 
         private void UpdateNumBox()
         {
             SetFoV(Convert.ToSingle(numFoV.Value));
+        }
+        private void UpdateNumBoxFPS()
+        {
+            SetFPS(Convert.ToInt32(numFPS.Value));
         }
 
         private void progStart()
@@ -635,6 +697,13 @@ namespace MultiCoD_FoV_Changer
                     {
                         WriteFoV(fFoV);
                     }
+
+                    int readFPS = Memory.ReadInt("com_maxfps");
+
+                    if (readFPS != maxFPS)
+                    {
+                        WriteFPS(maxFPS);
+                    }
                 }
 #if !DEBUG
             }
@@ -666,7 +735,7 @@ namespace MultiCoD_FoV_Changer
                         try
                         {
 #endif
-                            if (Memory.FindDvarAddresses(new[] { "cg_fov" }, new[] { "cg_fovScale" }))
+                            if (Memory.FindDvarAddresses(new[] { "cg_fov", "com_maxfps" }, new[] { "cg_fovScale" }))
                             {
                                 pFoV = Memory.dvarAddresses["cg_fov"];
                                 progStart();
@@ -817,6 +886,11 @@ namespace MultiCoD_FoV_Changer
             UpdateNumBox();
         }
 
+        private void numFPS_ValueChanged(object sender, EventArgs e)
+        {
+            UpdateNumBoxFPS();
+        }
+
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (proc != null && isRunning(false)) progStop();
@@ -908,10 +982,5 @@ namespace MultiCoD_FoV_Changer
         }
 
         #endregion
-
-        private void MainForm_Load(object sender, EventArgs e)
-        {
-
-        }
     }
 }

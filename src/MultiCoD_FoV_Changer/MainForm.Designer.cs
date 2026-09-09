@@ -65,8 +65,12 @@ namespace MultiCoD_FoV_Changer
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.btnExit = new System.Windows.Forms.Button();
             this.chkFovScale = new System.Windows.Forms.CheckBox();
+            this.btnResetFPS = new System.Windows.Forms.Button();
+            this.numFPS = new System.Windows.Forms.NumericUpDown();
+            this.lblFPS = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.numFoV)).BeginInit();
             this.groupBox1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numFPS)).BeginInit();
             this.SuspendLayout();
             // 
             // TimerHoldKey
@@ -100,7 +104,7 @@ namespace MultiCoD_FoV_Changer
             this.chkBeep.Checked = true;
             this.chkBeep.CheckState = System.Windows.Forms.CheckState.Checked;
             this.chkBeep.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.chkBeep.Location = new System.Drawing.Point(29, 110);
+            this.chkBeep.Location = new System.Drawing.Point(29, 136);
             this.chkBeep.Name = "chkBeep";
             this.chkBeep.Size = new System.Drawing.Size(130, 20);
             this.chkBeep.TabIndex = 5;
@@ -133,7 +137,7 @@ namespace MultiCoD_FoV_Changer
             this.numFoV.MinimumSize = new System.Drawing.Size(58, 0);
             this.numFoV.Name = "numFoV";
             this.numFoV.Size = new System.Drawing.Size(70, 22);
-            this.numFoV.TabIndex = 2;
+            this.numFoV.TabIndex = 0;
             this.numFoV.Value = new decimal(new int[] {
             65,
             0,
@@ -144,7 +148,7 @@ namespace MultiCoD_FoV_Changer
             // btnAbout
             // 
             this.btnAbout.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnAbout.Location = new System.Drawing.Point(132, 300);
+            this.btnAbout.Location = new System.Drawing.Point(132, 326);
             this.btnAbout.Name = "btnAbout";
             this.btnAbout.Size = new System.Drawing.Size(70, 30);
             this.btnAbout.TabIndex = 19;
@@ -158,7 +162,7 @@ namespace MultiCoD_FoV_Changer
             this.btnReset.Location = new System.Drawing.Point(222, 60);
             this.btnReset.Name = "btnReset";
             this.btnReset.Size = new System.Drawing.Size(24, 24);
-            this.btnReset.TabIndex = 3;
+            this.btnReset.TabIndex = 1;
             this.btnReset.Text = "*";
             this.ToolTip1.SetToolTip(this.btnReset, "Reset to default");
             this.btnReset.UseVisualStyleBackColor = true;
@@ -167,7 +171,7 @@ namespace MultiCoD_FoV_Changer
             // lblVersion
             // 
             this.lblVersion.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblVersion.Location = new System.Drawing.Point(12, 300);
+            this.lblVersion.Location = new System.Drawing.Point(12, 326);
             this.lblVersion.MinimumSize = new System.Drawing.Size(82, 0);
             this.lblVersion.Name = "lblVersion";
             this.lblVersion.Size = new System.Drawing.Size(82, 30);
@@ -180,7 +184,7 @@ namespace MultiCoD_FoV_Changer
             // 
             this.lblInstructions.AutoSize = true;
             this.lblInstructions.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblInstructions.Location = new System.Drawing.Point(139, 181);
+            this.lblInstructions.Location = new System.Drawing.Point(139, 207);
             this.lblInstructions.Name = "lblInstructions";
             this.lblInstructions.Size = new System.Drawing.Size(88, 16);
             this.lblInstructions.TabIndex = 8;
@@ -192,7 +196,7 @@ namespace MultiCoD_FoV_Changer
             this.lblLink.BackColor = System.Drawing.SystemColors.Control;
             this.lblLink.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblLink.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
-            this.lblLink.Location = new System.Drawing.Point(43, 276);
+            this.lblLink.Location = new System.Drawing.Point(43, 302);
             this.lblLink.Margin = new System.Windows.Forms.Padding(0);
             this.lblLink.MaximumSize = new System.Drawing.Size(260, 0);
             this.lblLink.Name = "lblLink";
@@ -209,7 +213,7 @@ namespace MultiCoD_FoV_Changer
             this.chkUpdate.Checked = true;
             this.chkUpdate.CheckState = System.Windows.Forms.CheckState.Checked;
             this.chkUpdate.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.chkUpdate.Location = new System.Drawing.Point(29, 131);
+            this.chkUpdate.Location = new System.Drawing.Point(29, 157);
             this.chkUpdate.Name = "chkUpdate";
             this.chkUpdate.Size = new System.Drawing.Size(198, 20);
             this.chkUpdate.TabIndex = 6;
@@ -223,7 +227,7 @@ namespace MultiCoD_FoV_Changer
             this.lblUpdateAvail.Enabled = false;
             this.lblUpdateAvail.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblUpdateAvail.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(180)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.lblUpdateAvail.Location = new System.Drawing.Point(18, 254);
+            this.lblUpdateAvail.Location = new System.Drawing.Point(18, 280);
             this.lblUpdateAvail.Name = "lblUpdateAvail";
             this.lblUpdateAvail.Size = new System.Drawing.Size(258, 13);
             this.lblUpdateAvail.TabIndex = 12;
@@ -240,7 +244,7 @@ namespace MultiCoD_FoV_Changer
             // 
             this.btnKeyZoomOut.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnKeyZoomOut.ForeColor = System.Drawing.Color.MidnightBlue;
-            this.btnKeyZoomOut.Location = new System.Drawing.Point(28, 178);
+            this.btnKeyZoomOut.Location = new System.Drawing.Point(28, 204);
             this.btnKeyZoomOut.Name = "btnKeyZoomOut";
             this.btnKeyZoomOut.Size = new System.Drawing.Size(108, 23);
             this.btnKeyZoomOut.TabIndex = 13;
@@ -252,7 +256,7 @@ namespace MultiCoD_FoV_Changer
             // 
             this.btnKeyZoomIn.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnKeyZoomIn.ForeColor = System.Drawing.Color.MidnightBlue;
-            this.btnKeyZoomIn.Location = new System.Drawing.Point(28, 200);
+            this.btnKeyZoomIn.Location = new System.Drawing.Point(28, 226);
             this.btnKeyZoomIn.Name = "btnKeyZoomIn";
             this.btnKeyZoomIn.Size = new System.Drawing.Size(108, 23);
             this.btnKeyZoomIn.TabIndex = 14;
@@ -264,7 +268,7 @@ namespace MultiCoD_FoV_Changer
             // 
             this.lblZoomIn.AutoSize = true;
             this.lblZoomIn.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblZoomIn.Location = new System.Drawing.Point(139, 203);
+            this.lblZoomIn.Location = new System.Drawing.Point(139, 229);
             this.lblZoomIn.Name = "lblZoomIn";
             this.lblZoomIn.Size = new System.Drawing.Size(80, 16);
             this.lblZoomIn.TabIndex = 15;
@@ -274,7 +278,7 @@ namespace MultiCoD_FoV_Changer
             // 
             this.lblResetDefault.AutoSize = true;
             this.lblResetDefault.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblResetDefault.Location = new System.Drawing.Point(139, 225);
+            this.lblResetDefault.Location = new System.Drawing.Point(139, 251);
             this.lblResetDefault.Name = "lblResetDefault";
             this.lblResetDefault.Size = new System.Drawing.Size(125, 16);
             this.lblResetDefault.TabIndex = 16;
@@ -284,7 +288,7 @@ namespace MultiCoD_FoV_Changer
             // 
             this.btnKeyReset.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnKeyReset.ForeColor = System.Drawing.Color.MidnightBlue;
-            this.btnKeyReset.Location = new System.Drawing.Point(28, 222);
+            this.btnKeyReset.Location = new System.Drawing.Point(28, 248);
             this.btnKeyReset.Name = "btnKeyReset";
             this.btnKeyReset.Size = new System.Drawing.Size(108, 23);
             this.btnKeyReset.TabIndex = 17;
@@ -298,7 +302,7 @@ namespace MultiCoD_FoV_Changer
             this.chkHotkeys.Checked = true;
             this.chkHotkeys.CheckState = System.Windows.Forms.CheckState.Checked;
             this.chkHotkeys.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.chkHotkeys.Location = new System.Drawing.Point(29, 152);
+            this.chkHotkeys.Location = new System.Drawing.Point(29, 178);
             this.chkHotkeys.Name = "chkHotkeys";
             this.chkHotkeys.Size = new System.Drawing.Size(119, 20);
             this.chkHotkeys.TabIndex = 7;
@@ -330,7 +334,7 @@ namespace MultiCoD_FoV_Changer
             // btnExit
             // 
             this.btnExit.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnExit.Location = new System.Drawing.Point(212, 300);
+            this.btnExit.Location = new System.Drawing.Point(212, 326);
             this.btnExit.Name = "btnExit";
             this.btnExit.Size = new System.Drawing.Size(70, 30);
             this.btnExit.TabIndex = 20;
@@ -342,18 +346,65 @@ namespace MultiCoD_FoV_Changer
             // 
             this.chkFovScale.AutoSize = true;
             this.chkFovScale.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.chkFovScale.Location = new System.Drawing.Point(29, 89);
+            this.chkFovScale.Location = new System.Drawing.Point(29, 115);
             this.chkFovScale.Name = "chkFovScale";
             this.chkFovScale.Size = new System.Drawing.Size(225, 20);
             this.chkFovScale.TabIndex = 4;
             this.chkFovScale.Text = "Apply to ADS / scopes (fovScale)";
             this.chkFovScale.UseVisualStyleBackColor = true;
             // 
+            // btnResetFPS
+            // 
+            this.btnResetFPS.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnResetFPS.Location = new System.Drawing.Point(222, 85);
+            this.btnResetFPS.Name = "btnResetFPS";
+            this.btnResetFPS.Size = new System.Drawing.Size(24, 24);
+            this.btnResetFPS.TabIndex = 3;
+            this.btnResetFPS.Text = "*";
+            this.ToolTip1.SetToolTip(this.btnResetFPS, "Reset to default");
+            this.btnResetFPS.UseVisualStyleBackColor = true;
+            // 
+            // numFPS
+            // 
+            this.numFPS.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.numFPS.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.numFPS.Location = new System.Drawing.Point(152, 86);
+            this.numFPS.Maximum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            this.numFPS.MinimumSize = new System.Drawing.Size(58, 0);
+            this.numFPS.Name = "numFPS";
+            this.numFPS.Size = new System.Drawing.Size(70, 22);
+            this.numFPS.TabIndex = 2;
+            this.ToolTip1.SetToolTip(this.numFPS, "While you can put it to 0 (infinite), it is not recommended, as it can cause stut" +
+        "ter.");
+            this.numFPS.Value = new decimal(new int[] {
+            85,
+            0,
+            0,
+            0});
+            this.numFPS.ValueChanged += new System.EventHandler(this.numFPS_ValueChanged);
+            // 
+            // lblFPS
+            // 
+            this.lblFPS.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblFPS.Location = new System.Drawing.Point(12, 85);
+            this.lblFPS.Name = "lblFPS";
+            this.lblFPS.Size = new System.Drawing.Size(131, 20);
+            this.lblFPS.TabIndex = 23;
+            this.lblFPS.Text = "Max FPS";
+            this.lblFPS.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(294, 339);
+            this.ClientSize = new System.Drawing.Size(294, 366);
+            this.Controls.Add(this.btnResetFPS);
+            this.Controls.Add(this.numFPS);
+            this.Controls.Add(this.lblFPS);
             this.Controls.Add(this.chkFovScale);
             this.Controls.Add(this.chkHotkeys);
             this.Controls.Add(this.btnKeyReset);
@@ -383,6 +434,7 @@ namespace MultiCoD_FoV_Changer
             this.MouseClick += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseClick);
             ((System.ComponentModel.ISupportInitialize)(this.numFoV)).EndInit();
             this.groupBox1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.numFPS)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -417,6 +469,9 @@ namespace MultiCoD_FoV_Changer
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Button btnExit;
         private System.Windows.Forms.CheckBox chkFovScale;
+        private System.Windows.Forms.Button btnResetFPS;
+        private System.Windows.Forms.NumericUpDown numFPS;
+        private System.Windows.Forms.Label lblFPS;
     }
 }
 
