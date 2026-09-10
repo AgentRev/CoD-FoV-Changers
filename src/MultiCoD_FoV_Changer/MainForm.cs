@@ -1,29 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.Eventing.Reader;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Media;
 using System.Net;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Web;
 using System.Windows.Forms;
-using Microsoft.Win32;
 
 
 namespace MultiCoD_FoV_Changer
 {
-#if WIN64
     using dword_ptr = UInt64;
-#else
-    using dword_ptr = UInt32;
-#endif
 
     #region struct KeyHook
 
@@ -43,9 +35,9 @@ namespace MultiCoD_FoV_Changer
     {
         #region constants
 
-        public const string c_toolVer = "4.00.17.1";
+        public const string c_toolVer = "4.00.17.2";
 
-        public const float c_FoV = 65f;
+        public const float c_FoV = 90f;
         public const float c_FoV_lowerLimit = 65f;
         public const float c_FoV_upperLimit = 100f;
 
@@ -137,7 +129,7 @@ namespace MultiCoD_FoV_Changer
                         try
                         {
 #endif
-                            Memory.Init(proc.Id, (dword_ptr)proc.MainModule.BaseAddress);
+                            Memory.Init(proc);
 #if !DEBUG
                         }
                         catch (Exception ex)

@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Resources;
 using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("MultiCoD FoV Changer")]
@@ -9,6 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCopyright("AgentRev & Activision")]
 [assembly: AssemblyTrademark("Activision")]
 [assembly: AssemblyCulture("")]
+[assembly: NeutralResourcesLanguage("en", UltimateResourceFallbackLocation.MainAssembly)]
 
 [assembly: ComVisible(false)]
 

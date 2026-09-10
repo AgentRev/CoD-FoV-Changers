@@ -62,15 +62,14 @@ namespace MultiCoD_FoV_Changer
             this.chkHotkeys = new System.Windows.Forms.CheckBox();
             this.ToolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.lblGameStatus = new System.Windows.Forms.Label();
+            this.numFPS = new System.Windows.Forms.NumericUpDown();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.btnExit = new System.Windows.Forms.Button();
             this.chkFovScale = new System.Windows.Forms.CheckBox();
-            this.btnResetFPS = new System.Windows.Forms.Button();
-            this.numFPS = new System.Windows.Forms.NumericUpDown();
             this.lblFPS = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.numFoV)).BeginInit();
-            this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numFPS)).BeginInit();
+            this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // TimerHoldKey
@@ -95,7 +94,7 @@ namespace MultiCoD_FoV_Changer
             // 
             // TimerCheck
             // 
-            this.TimerCheck.Interval = 1000;
+            this.TimerCheck.Interval = 3000;
             this.TimerCheck.Tick += new System.EventHandler(this.TimerCheck_Tick);
             // 
             // chkBeep
@@ -124,11 +123,6 @@ namespace MultiCoD_FoV_Changer
             this.numFoV.Enabled = false;
             this.numFoV.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.numFoV.Location = new System.Drawing.Point(152, 61);
-            this.numFoV.Maximum = new decimal(new int[] {
-            90,
-            0,
-            0,
-            0});
             this.numFoV.Minimum = new decimal(new int[] {
             65,
             0,
@@ -139,7 +133,7 @@ namespace MultiCoD_FoV_Changer
             this.numFoV.Size = new System.Drawing.Size(70, 22);
             this.numFoV.TabIndex = 0;
             this.numFoV.Value = new decimal(new int[] {
-            65,
+            90,
             0,
             0,
             0});
@@ -322,6 +316,29 @@ namespace MultiCoD_FoV_Changer
             this.ToolTip1.SetToolTip(this.lblGameStatus, "Start a mission or join a match! Compatible with:\nMW1 \'07, WaW, MW2 \'09, BO1, MW3" +
         " \'11, BO2, Ghosts, AW");
             // 
+            // numFPS
+            // 
+            this.numFPS.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.numFPS.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.numFPS.Location = new System.Drawing.Point(152, 86);
+            this.numFPS.Maximum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            this.numFPS.MinimumSize = new System.Drawing.Size(58, 0);
+            this.numFPS.Name = "numFPS";
+            this.numFPS.Size = new System.Drawing.Size(70, 22);
+            this.numFPS.TabIndex = 2;
+            this.ToolTip1.SetToolTip(this.numFPS, "While you can set it to 0 (infinite), it is not recommended, as it can cause stut" +
+        "ter.");
+            this.numFPS.Value = new decimal(new int[] {
+            200,
+            0,
+            0,
+            0});
+            this.numFPS.ValueChanged += new System.EventHandler(this.numFPS_ValueChanged);
+            // 
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.lblGameStatus);
@@ -353,40 +370,6 @@ namespace MultiCoD_FoV_Changer
             this.chkFovScale.Text = "Apply to ADS / scopes (fovScale)";
             this.chkFovScale.UseVisualStyleBackColor = true;
             // 
-            // btnResetFPS
-            // 
-            this.btnResetFPS.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnResetFPS.Location = new System.Drawing.Point(222, 85);
-            this.btnResetFPS.Name = "btnResetFPS";
-            this.btnResetFPS.Size = new System.Drawing.Size(24, 24);
-            this.btnResetFPS.TabIndex = 3;
-            this.btnResetFPS.Text = "*";
-            this.ToolTip1.SetToolTip(this.btnResetFPS, "Reset to default");
-            this.btnResetFPS.UseVisualStyleBackColor = true;
-            // 
-            // numFPS
-            // 
-            this.numFPS.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.numFPS.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.numFPS.Location = new System.Drawing.Point(152, 86);
-            this.numFPS.Maximum = new decimal(new int[] {
-            1000,
-            0,
-            0,
-            0});
-            this.numFPS.MinimumSize = new System.Drawing.Size(58, 0);
-            this.numFPS.Name = "numFPS";
-            this.numFPS.Size = new System.Drawing.Size(70, 22);
-            this.numFPS.TabIndex = 2;
-            this.ToolTip1.SetToolTip(this.numFPS, "While you can put it to 0 (infinite), it is not recommended, as it can cause stut" +
-        "ter.");
-            this.numFPS.Value = new decimal(new int[] {
-            85,
-            0,
-            0,
-            0});
-            this.numFPS.ValueChanged += new System.EventHandler(this.numFPS_ValueChanged);
-            // 
             // lblFPS
             // 
             this.lblFPS.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -402,7 +385,6 @@ namespace MultiCoD_FoV_Changer
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(294, 366);
-            this.Controls.Add(this.btnResetFPS);
             this.Controls.Add(this.numFPS);
             this.Controls.Add(this.lblFPS);
             this.Controls.Add(this.chkFovScale);
@@ -433,8 +415,8 @@ namespace MultiCoD_FoV_Changer
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.MouseClick += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseClick);
             ((System.ComponentModel.ISupportInitialize)(this.numFoV)).EndInit();
-            this.groupBox1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.numFPS)).EndInit();
+            this.groupBox1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -469,7 +451,6 @@ namespace MultiCoD_FoV_Changer
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Button btnExit;
         private System.Windows.Forms.CheckBox chkFovScale;
-        private System.Windows.Forms.Button btnResetFPS;
         private System.Windows.Forms.NumericUpDown numFPS;
         private System.Windows.Forms.Label lblFPS;
     }
