@@ -2,24 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices;
 
 namespace MultiCoD_FoV_Changer
 {
     using dword_ptr = UInt64;
+
     public static class Memory
     {
-        #region DLLImports
-
-        [DllImport("kernel32.dll")]
-        public static extern IntPtr OpenProcess(uint dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, int dwProcessId);
-
-        [DllImport("kernel32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool CloseHandle(IntPtr hObject);
-
-        #endregion
-
         #region Variables
 
         static dword_ptr baseAddr;
@@ -38,45 +27,31 @@ namespace MultiCoD_FoV_Changer
         {
             if (hProc != IntPtr.Zero)
             {
-                CloseHandle(hProc);
+                PInvokeAPI.CloseHandle(hProc);
             }
 
-            try
-            {
-                const uint dwDesiredAccess = 0x0008 | 0x0010 | 0x0020 | 0x0400; // PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION
-                hProc = OpenProcess(dwDesiredAccess, false, proc.Id);
-            }
-            catch (Exception e)
-            {
-                throw new Exception($"OpenProcess failed.\n{e.Message}", e);
-            }
+            const uint dwDesiredAccess = 0x0008 | 0x0010 | 0x0020 | 0x0400; // PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION
+            hProc = PInvokeAPI.OpenProcess(dwDesiredAccess, false, proc.Id);
 
             if (hProc == IntPtr.Zero)
             {
                 throw new Exception("OpenProcess failed.");
             }
 
-#if !DEBUG
-            try
-            {
-#endif
-                baseAddr = MemoryAPI.GetBaseAddress(proc, hProc);
-                isGameX64 = MemoryAPI.IsTarget64Bit(hProc);
-                dvarPtrSize = isGameX64 ? sizeof(Int64) : sizeof(Int32);
-#if !DEBUG
-            }
-            catch (Exception e)
-            {
-                throw new Exception($"IsWow64Process failed.\n{e.Message}", e);
-            }
-#endif
+            isGameX64 = PInvokeAPI.IsTarget64Bit(hProc);
+
+            baseAddr = (!Environment.Is64BitProcess && isGameX64)
+                ? PInvokeAPI.GetBaseAddressWow64(hProc)
+                : (ulong)proc.MainModule.BaseAddress.ToInt64();
+
+            dvarPtrSize = isGameX64 ? sizeof(Int64) : sizeof(Int32);
         }
 
         public static void Reset()
         {
             if (hProc != IntPtr.Zero)
             {
-                CloseHandle(hProc);
+                PInvokeAPI.CloseHandle(hProc);
             }
 
             hProc = IntPtr.Zero;
@@ -84,30 +59,15 @@ namespace MultiCoD_FoV_Changer
             dvarAddresses.Clear();
         }
 
-        private static bool ReadBytes(dword_ptr addr, ulong length, out byte[] buffer)
+        private static int ReadBytes(dword_ptr addr, int length, out byte[] buffer)
         {
             buffer = new byte[length];
-
-            try
-            {
-                return MemoryAPI.ReadMemory(hProc, addr, buffer);
-            }
-            catch (Exception e)
-            {
-                throw new Exception($"ReadProcessMemory failed for address: 0x{addr:X}\n{e.Message}", e);
-            }
+            return PInvokeAPI.ReadMemory(hProc, addr, buffer, length);
         }
 
-        private static bool WriteBytes(dword_ptr addr, byte[] buffer)
+        private static int WriteBytes(dword_ptr addr, byte[] buffer)
         {
-            try
-            {
-                return MemoryAPI.WriteMemory(hProc, addr, buffer);
-            }
-            catch (Exception e)
-            {
-                throw new Exception($"WRiteProcessMemory failed for address: 0x{addr:X}\n{e.Message}", e);
-            }
+            return PInvokeAPI.WriteMemory(hProc, addr, buffer, buffer.Length);
         }
 
         public static bool FindDvarAddresses(string[] requiredNames, string[] optionalNames = null)
@@ -116,6 +76,9 @@ namespace MultiCoD_FoV_Changer
 
             // Combine requiredNames and optionalNames into a single array to search
             string[] dvarNames = (optionalNames != null) ? requiredNames.Concat(optionalNames).ToArray() : requiredNames;
+
+            // Track the index boundary for required names
+            int requiredCount = requiredNames.Length;
 
             // Track if cg_fov needs to be added to resolve value offset
             bool cgFovNeeded = dvarValueOffset == 0 && !dvarNames.Contains("cg_fov");
@@ -135,7 +98,7 @@ namespace MultiCoD_FoV_Changer
             int pendingCount = dvarCount;
 
             // Search game memory to find addresses of dvar name strings
-            for (int iBuf = 0; iBuf <= iBufMax && pendingCount > 0; iBuf += sizeof(int))
+            for (int iBuf = 0; iBuf <= iBufMax && pendingCount > 0; iBuf++)
             {
                 for (int iPending = pendingCount - 1; iPending >= 0; iPending--)
                 {
@@ -162,12 +125,30 @@ namespace MultiCoD_FoV_Changer
                 }
             }
 
-            // Abort if any address is invalid
-            if (nameAddressesArr.Any(addr => addr < baseAddr))
+            // Only fail if ANY REQUIRED name was not found
+            for (int i = 0; i < requiredCount; i++)
+            {
+                if (nameAddressesArr[i] < baseAddr)
+                    return false;
+            }
+
+            // Compute startAddr using only the found name addresses
+            var validAddresses = nameAddressesArr.Where(addr => addr >= baseAddr);
+            if (!validAddresses.Any())
                 return false;
 
-            pendingCount = dvarCount;
-            pendingNameIndexes = Enumerable.Range(0, dvarCount).ToArray();
+            var maxFoundAddr = validAddresses.Max();
+
+            // Prepare pending list only for names whose string addresses were successfully located
+            var foundIndexes = new List<int>();
+            for (int i = 0; i < dvarCount; i++)
+            {
+                if (nameAddressesArr[i] >= baseAddr)
+                    foundIndexes.Add(i);
+            }
+
+            pendingNameIndexes = foundIndexes.ToArray();
+            pendingCount = pendingNameIndexes.Length;
 
             iBufMax = buffer.Length - dvarPtrSize - 1;
             bool isGameX64 = dvarPtrSize == sizeof(Int64);
@@ -177,7 +158,9 @@ namespace MultiCoD_FoV_Changer
             {
                 fixed (byte* pBuffer = buffer)
                 {
-                    for (int iBuf = (int)(nameAddressesArr.Max() - baseAddr); iBuf <= iBufMax && pendingCount > 0; iBuf += sizeof(int))
+                    var startAddr = (maxFoundAddr / sizeof(int) + 1) * sizeof(int); // round up to next multiple of 4
+
+                    for (int iBuf = (int)(startAddr - baseAddr); iBuf <= iBufMax && pendingCount > 0; iBuf += sizeof(int))
                     {
                         dword_ptr ptrVal = isGameX64 ? *(UInt64*)(pBuffer + iBuf) : *(UInt32*)(pBuffer + iBuf);
 
@@ -202,7 +185,6 @@ namespace MultiCoD_FoV_Changer
                 {
                     int iBufCgFov = (int)(cgFovStructAddr - baseAddr);
 
-                    // "DvarValue reset" should normally always be within this range for IW3/4/5/6 and T4/5/6 engines, hopefully S1 as well
                     for (int offset = dvarPtrSize + 0x34; offset >= 0x28; offset -= sizeof(int))
                     {
                         if (BitConverter.ToSingle(buffer, iBufCgFov + offset) == 65f)
@@ -258,6 +240,6 @@ namespace MultiCoD_FoV_Changer
             WriteBytes(dvarAddresses[name], BitConverter.GetBytes(BitConverter.ToInt32(buffer, 0x20))); // "DvarValue reset" is always 0x20 after the value
         }
 
-#endregion
+        #endregion
     }
 }

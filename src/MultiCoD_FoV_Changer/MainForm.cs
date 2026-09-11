@@ -35,9 +35,10 @@ namespace MultiCoD_FoV_Changer
     {
         #region constants
 
-        public const string c_toolVer = "4.00.17.2";
+        public const string c_toolVer = "4.00.17.3";
 
         public const float c_FoV = 90f;
+        public const float c_FoV_vanilla = 65f;
         public const float c_FoV_lowerLimit = 65f;
         public const float c_FoV_upperLimit = 100f;
 
@@ -92,10 +93,47 @@ namespace MultiCoD_FoV_Changer
         private bool requestSent;
         private Process proc = null;
 
-        SoundPlayer sndGameFound => new SoundPlayer(GetType().Assembly.GetManifestResourceStream($"{GetType().Namespace}.Resources.gamefound.wav"));
-        SoundPlayer sndGameLost => new SoundPlayer(GetType().Assembly.GetManifestResourceStream($"{GetType().Namespace}.Resources.gamelost.wav"));
+        // Store instances at class level so the streams stay open
+        SoundPlayer sndGameFound;
+        SoundPlayer sndGameLost;
 
-        bool isRunning(bool init)
+        private void InitAudio()
+        {
+            var assembly = GetType().Assembly;
+
+            string foundPath = $"{GetType().Namespace}.Resources.gamefound.wav";
+            string lostPath = $"{GetType().Namespace}.Resources.gamelost.wav";
+
+            Stream streamFound = assembly.GetManifestResourceStream(foundPath);
+            Stream streamLost = assembly.GetManifestResourceStream(lostPath);
+
+            // If either resource fails to load, display an error message box listing all embedded manifest names
+            if (streamFound == null || streamLost == null)
+            {
+                string[] resourceNames = assembly.GetManifestResourceNames();
+                string manifestList = resourceNames.Length > 0
+                    ? string.Join("\n", resourceNames)
+                    : "No embedded resources found.";
+
+                MessageBox.Show(
+                    $"Failed to load embedded audio files.\n\n" +
+                    $"Expected:\n- {foundPath}\n- {lostPath}\n\n" +
+                    $"Available Embedded Resources:\n{manifestList}",
+                    "Resource Loading Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning
+                );
+                return;
+            }
+
+            sndGameFound = new SoundPlayer(streamFound);
+            sndGameFound.Load();
+
+            sndGameLost = new SoundPlayer(streamLost);
+            sndGameLost.Load();
+        }
+
+        bool isRunning(bool init = false)
         {
             if (proc != null)
             {
@@ -161,6 +199,7 @@ namespace MultiCoD_FoV_Changer
         public MainForm()
         {
             InitializeComponent();
+            InitAudio();
 
             saveSettings = false;
             InitFovChanger();
@@ -339,12 +378,12 @@ namespace MultiCoD_FoV_Changer
             else if (currentKey == catchKeys[1])
                 SetFoV(fFoV - 1);
             else if (currentKey == catchKeys[2])
-                SetFoV(c_FoV);
+                SetFoV(c_FoV_vanilla);
         }
 
         private void WriteFoV(float val)
         {
-            if (proc != null && isRunning(false))
+            if (proc != null && isRunning())
             {
                 var hasFovScale = Memory.dvarAddresses.ContainsKey("cg_fovScale");
 
@@ -380,9 +419,9 @@ namespace MultiCoD_FoV_Changer
             try
             {
 #endif
-                if (proc != null && isRunning(false) && writeAllowed)
+                if (proc != null && isRunning() && writeAllowed)
                 {
-                    WriteFoV(reset ? c_FoV : fFoV);
+                    WriteFoV(reset ? c_FoV_vanilla : fFoV);
                 }
 #if !DEBUG
             }
@@ -392,7 +431,6 @@ namespace MultiCoD_FoV_Changer
                 Application.Exit();
             }
 #endif
-
             if (!reset)
             {
                 numFoV.Value = Convert.ToDecimal(fFoV);
@@ -401,15 +439,21 @@ namespace MultiCoD_FoV_Changer
         }
         private void WriteFPS(int val)
         {
-            if (proc != null && isRunning(false))
+            if (proc != null && isRunning())
             {
                 if (val >= 0)
                 {
+                    if (Memory.dvarAddresses.ContainsKey("data_validation_allow_drop"))
+                        Memory.WriteInt("data_validation_allow_drop", 0); // needed for AW, otherwise the game crashes
+
                     Memory.WriteInt("com_maxfps", val);
                 }
                 else
                 {
                     Memory.ResetDvar("com_maxfps");
+
+                    if (Memory.dvarAddresses.ContainsKey("data_validation_allow_drop"))
+                        Memory.WriteInt("data_validation_allow_drop", 1);
                 }
             }
         }
@@ -433,7 +477,7 @@ namespace MultiCoD_FoV_Changer
             try
             {
 #endif
-                if (proc != null && isRunning(false) && writeAllowed)
+                if (proc != null && isRunning() && writeAllowed)
                 {
                     WriteFPS(reset ? -1 : maxFPS);
                 }
@@ -464,6 +508,14 @@ namespace MultiCoD_FoV_Changer
 
         private void progStart()
         {
+            // Debug check to verify embedded resources under Mono
+            #if DEBUG
+            foreach (string name in GetType().Assembly.GetManifestResourceNames())
+            {
+                Console.WriteLine("Embedded resource: " + name);
+            }
+            #endif
+
             TimerVerif.Stop();
             writeAllowed = true;
             UpdateNumBox();
@@ -476,8 +528,8 @@ namespace MultiCoD_FoV_Changer
                 lblGameStatus.Refresh();
             }
 
-            if (doBeep)
-                sndGameFound.PlaySync();
+            if (doBeep && sndGameFound != null)
+                sndGameFound.Play();
         }
 
         private void progStop()
@@ -488,8 +540,17 @@ namespace MultiCoD_FoV_Changer
             lblGameStatus.ForeColor = DefaultForeColor;
             lblGameStatus.Refresh();
 
-            if (writeAllowed && doBeep)
-                sndGameLost.PlaySync();
+            if (writeAllowed && doBeep && sndGameLost != null)
+            {
+                try
+                {
+                    sndGameLost.PlaySync(); // Blocks execution until WAV playback completes
+                }
+                catch
+                {
+                    // Fallback gracefully if audio device fails under Wine/Mono
+                }
+            }
 
             writeAllowed = false;
             proc = null;
@@ -681,7 +742,7 @@ namespace MultiCoD_FoV_Changer
             try
             {
 #endif
-                if (proc != null && isRunning(false))
+                if (proc != null && isRunning())
                 {
                     float readValue = Memory.ReadFloat("cg_fov");
 
@@ -714,7 +775,7 @@ namespace MultiCoD_FoV_Changer
 
         private void TimerVerif_Tick(object sender, EventArgs e)
         {
-            if (proc != null && isRunning(false))
+            if (proc != null && isRunning())
             {
                 proc.Refresh();
 #if !DEBUG
@@ -727,7 +788,7 @@ namespace MultiCoD_FoV_Changer
                         try
                         {
 #endif
-                            if (Memory.FindDvarAddresses(new[] { "cg_fov", "com_maxfps" }, new[] { "cg_fovScale" }))
+                            if (Memory.FindDvarAddresses(new[] { "cg_fov", "com_maxfps" }, new[] { "cg_fovScale", "data_validation_allow_drop" }))
                             {
                                 pFoV = Memory.dvarAddresses["cg_fov"];
                                 progStart();
@@ -885,7 +946,7 @@ namespace MultiCoD_FoV_Changer
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (proc != null && isRunning(false)) progStop();
+            if (proc != null && isRunning()) progStop();
         }
 
         private void btnAbout_Click(object sender, EventArgs e)

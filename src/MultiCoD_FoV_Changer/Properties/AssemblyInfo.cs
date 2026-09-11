@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCopyright("AgentRev & Activision")]
 [assembly: AssemblyTrademark("Activision")]
 [assembly: AssemblyCulture("")]
-[assembly: NeutralResourcesLanguage("en", UltimateResourceFallbackLocation.MainAssembly)]
+[assembly: NeutralResourcesLanguage("en-US", UltimateResourceFallbackLocation.MainAssembly)]
 
 [assembly: ComVisible(false)]
 
