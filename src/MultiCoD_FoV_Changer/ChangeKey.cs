@@ -43,9 +43,21 @@ namespace MultiCoD_FoV_Changer
             InitializeComponent();
             this.Text += '"' + hotkey + '"';
 
-            ProcessModule objCurrentModule = Process.GetCurrentProcess().MainModule;
-            objKeyboardProcess = new LowLevelKeyboardProc(captureKey);
-            ptrHook = SetWindowsHookEx(13, objKeyboardProcess, GetModuleHandle(objCurrentModule.ModuleName), 0);
+            try
+            {
+                // GetModuleHandle(null) gets the executable module handle directly 
+                // without invoking Process.GetCurrentProcess().MainModule
+                IntPtr hInstance = GetModuleHandle(null);
+                objKeyboardProcess = new LowLevelKeyboardProc(captureKey);
+                ptrHook = SetWindowsHookEx(13, objKeyboardProcess, hInstance, 0);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to set global keyboard hook: {ex.Message}\n\nKeybind shortcuts may not work.",
+                                "Warning",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Warning);
+            }
         }
 
         private IntPtr captureKey(int nCode, IntPtr wp, IntPtr lp)

@@ -1,7 +1,12 @@
+//#define DEBUGMESSAGES
+
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
 namespace MultiCoD_FoV_Changer
 {
@@ -11,11 +16,12 @@ namespace MultiCoD_FoV_Changer
     {
         #region Variables
 
-        static dword_ptr baseAddr;
+        public static dword_ptr baseAddr;
         static IntPtr hProc;
         static int dvarPtrSize;
         static dword_ptr dvarValueOffset;
-        static bool isGameX64;
+        static bool isGame64;
+        static bool readFailureShown = false;
 
         public static Dictionary<string, dword_ptr> dvarAddresses = new Dictionary<string, dword_ptr>();
 
@@ -35,16 +41,31 @@ namespace MultiCoD_FoV_Changer
 
             if (hProc == IntPtr.Zero)
             {
-                throw new Exception("OpenProcess failed.");
+                if (!proc.HasExited)
+                {
+                    var w32e = new Win32Exception(Marshal.GetLastWin32Error());
+                    throw new Exception($"OpenProcess failed.\n{w32e}");
+                }
+
+                Reset();
+                return;
             }
 
-            isGameX64 = PInvokeAPI.IsTarget64Bit(hProc);
+            try
+            {
+                baseAddr = PInvokeAPI.GetBaseAddress(hProc); // (dword_ptr)proc.MainModule.BaseAddress
+            }
+            catch
+            {
+                if (!proc.HasExited)
+                    throw;
 
-            baseAddr = (!Environment.Is64BitProcess && isGameX64)
-                ? PInvokeAPI.GetBaseAddressWow64(hProc)
-                : (ulong)proc.MainModule.BaseAddress.ToInt64();
+                Reset();
+                return;
+            }
 
-            dvarPtrSize = isGameX64 ? sizeof(Int64) : sizeof(Int32);
+            isGame64 = PInvokeAPI.IsTargetProcess64Bit(hProc);
+            dvarPtrSize = isGame64 ? sizeof(long) : sizeof(int);
         }
 
         public static void Reset()
@@ -57,6 +78,10 @@ namespace MultiCoD_FoV_Changer
             hProc = IntPtr.Zero;
             dvarValueOffset = 0;
             dvarAddresses.Clear();
+        }
+        private static int ReadBytes(dword_ptr addr, ref byte[] buffer)
+        {
+            return PInvokeAPI.ReadMemory(hProc, addr, buffer, buffer.Length);
         }
 
         private static int ReadBytes(dword_ptr addr, int length, out byte[] buffer)
@@ -72,7 +97,15 @@ namespace MultiCoD_FoV_Changer
 
         public static bool FindDvarAddresses(string[] requiredNames, string[] optionalNames = null)
         {
-            if (hProc == IntPtr.Zero) return false;
+            if (hProc == IntPtr.Zero)
+            {
+#if DEBUGMESSAGES
+                MessageBox.Show("FindDvarAddresses failed: Process handle is null.", "Debug - Init");
+#endif
+                return false;
+            }
+
+            dvarAddresses.Clear();
 
             // Combine requiredNames and optionalNames into a single array to search
             string[] dvarNames = (optionalNames != null) ? requiredNames.Concat(optionalNames).ToArray() : requiredNames;
@@ -87,127 +120,198 @@ namespace MultiCoD_FoV_Changer
             int dvarCount = dvarNames.Length;
 
             if (dvarCount == 0)
+            {
+#if DEBUGMESSAGES
+                MessageBox.Show("FindDvarAddresses failed: No Dvar names provided.", "Debug - Init");
+#endif
                 return false;
+            }
+
+#if DEBUGMESSAGES
+            MessageBox.Show(
+                $"Starting FindDvarAddresses:\n" +
+                $"Targeting {dvarCount} total Dvars ({requiredCount} required).\n" +
+                $"Dvars: {string.Join(", ", dvarNames)}\n" +
+                $"Current dvarValueOffset: 0x{dvarValueOffset:X}\n" +
+                $"Game x64: {isGame64}",
+                "Debug - Step 1: Initial Setup"
+            );
+#endif
+
+            int[] pendingStringIndexes = Enumerable.Range(0, dvarCount).ToArray();
+            int pendingStringCount = dvarCount;
+
+            int[] pendingStructIndexes = new int[dvarCount];
+            int pendingStructCount = 0;
 
             var nameAddressesArr = new dword_ptr[dvarCount];
-            var pendingNameIndexes = Enumerable.Range(0, dvarCount).ToArray();
+            dword_ptr nameAddressesMax = baseAddr;
 
-            ReadBytes(baseAddr, Constants.c_memReadRange, out byte[] buffer);
-
-            int iBufMax = 0x2000000; // first 32MB
-            int pendingCount = dvarCount;
+            const int chunkSize = 0x1000000; // 16 MB
+            const int chunkMargin = 0x100; // ensures dvar names and structs arent cut in half
+            const int stepSize = chunkSize - chunkMargin;
+            var buffer = new byte[chunkSize];
+            int totalBytesRead = 0;
 
             // Search game memory to find addresses of dvar name strings
-            for (int iBuf = 0; iBuf <= iBufMax && pendingCount > 0; iBuf++)
+
+            dword_ptr maxAddr = baseAddr + 0x2000000; // limits name scan range to 32 MB
+            int bytesRead, iBuf, iBufMax, iPending, iName;
+            bool match;
+
+            for (dword_ptr currAddr = baseAddr; currAddr < maxAddr && pendingStringCount > 0; currAddr += stepSize)
             {
-                for (int iPending = pendingCount - 1; iPending >= 0; iPending--)
+                bytesRead = ReadBytes(currAddr, ref buffer);
+                totalBytesRead += bytesRead;
+
+                iBufMax = Math.Min(buffer.Length, bytesRead) - chunkMargin;
+
+                for (iBuf = 0; iBuf < iBufMax && pendingStringCount > 0; iBuf++)
                 {
-                    int iName = pendingNameIndexes[iPending];
-                    ref var name = ref dvarNames[iName];
-
-                    // Equivalent to "if (strcmp(name, &buffer[iBuf]) == 0)"
-
-                    bool match = true;
-                    for (int iChar = 0; iChar < name.Length; iChar++)
+                    for (iPending = pendingStringCount - 1; iPending >= 0; iPending--)
                     {
-                        if (buffer[iBuf + iChar] != name[iChar])
+                        iName = pendingStringIndexes[iPending];
+                        ref string name = ref dvarNames[iName];
+
+                        match = true;
+                        for (int iChar = 0; iChar < name.Length; iChar++)
                         {
-                            match = false;
-                            break;
+                            if (buffer[iBuf + iChar] != name[iChar])
+                            {
+                                match = false;
+                                break;
+                            }
                         }
-                    }
 
-                    if (match && buffer[iBuf + name.Length] == '\0')
-                    {
-                        nameAddressesArr[iName] = baseAddr + (dword_ptr)iBuf;
-                        pendingNameIndexes[iPending] = pendingNameIndexes[--pendingCount]; // since iPending found, overwrite iPending element with last element, decrementing element count
+                        if (match && buffer[iBuf + name.Length] == '\0')
+                        {
+                            nameAddressesArr[iName] = currAddr + (dword_ptr)iBuf;
+                            pendingStringIndexes[iPending] = pendingStringIndexes[--pendingStringCount];
+                            pendingStructIndexes[pendingStructCount++] = iName;
+                        }
                     }
                 }
             }
 
-            // Only fail if ANY REQUIRED name was not found
-            for (int i = 0; i < requiredCount; i++)
+            if (totalBytesRead == 0 && !readFailureShown)
             {
-                if (nameAddressesArr[i] < baseAddr)
-                    return false;
-            }
-
-            // Compute startAddr using only the found name addresses
-            var validAddresses = nameAddressesArr.Where(addr => addr >= baseAddr);
-            if (!validAddresses.Any())
+                MessageBox.Show("Failed to read process memory.", "FoV Changer Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                readFailureShown = true;
                 return false;
-
-            var maxFoundAddr = validAddresses.Max();
-
-            // Prepare pending list only for names whose string addresses were successfully located
-            var foundIndexes = new List<int>();
-            for (int i = 0; i < dvarCount; i++)
-            {
-                if (nameAddressesArr[i] >= baseAddr)
-                    foundIndexes.Add(i);
             }
 
-            pendingNameIndexes = foundIndexes.ToArray();
-            pendingCount = pendingNameIndexes.Length;
+#if DEBUGMESSAGES
+            // Display string search results
+            string stringResults = string.Join("\n", dvarNames.Select((n, idx) =>
+                $"{n}: {(nameAddressesArr[idx] >= baseAddr ? $"0x{nameAddressesArr[idx]:X}" : "NOT FOUND")}"));
 
-            iBufMax = buffer.Length - dvarPtrSize - 1;
-            bool isGameX64 = dvarPtrSize == sizeof(Int64);
+            MessageBox.Show($"String search complete:\nTotal bytes read: 0x{totalBytesRead:X}\n\nResults:\n{stringResults}", "Debug - Step 3: String Addresses Found");
+#endif
+
+            // Fail if any required name was not found
+            for (iName = 0; iName < requiredCount; iName++)
+            {
+                if (nameAddressesArr[iName] < baseAddr)
+                {
+#if DEBUGMESSAGES
+                    MessageBox.Show($"Failed: Required string '{dvarNames[iName]}' was not found in memory.", "Debug - Step 3 Error");
+#endif
+                    return false;
+                }
+            }
 
             // Search game memory to find the dvar structs via their name pointers
             unsafe
             {
                 fixed (byte* pBuffer = buffer)
                 {
-                    var startAddr = (maxFoundAddr / sizeof(int) + 1) * sizeof(int); // round up to next multiple of 4
+                    dword_ptr ptrVal, structAddr;
+                    maxAddr = baseAddr + 0x10000000; // first 256MB RAM
+                    totalBytesRead = 0;
 
-                    for (int iBuf = (int)(startAddr - baseAddr); iBuf <= iBufMax && pendingCount > 0; iBuf += sizeof(int))
+                    for (dword_ptr currAddr = nameAddressesArr.Max(); currAddr < maxAddr && pendingStructCount > 0; currAddr += stepSize)
                     {
-                        dword_ptr ptrVal = isGameX64 ? *(UInt64*)(pBuffer + iBuf) : *(UInt32*)(pBuffer + iBuf);
+                        bytesRead = ReadBytes(currAddr, ref buffer);
+                        totalBytesRead += bytesRead;
 
-                        for (int iPending = pendingCount - 1; iPending >= 0; iPending--)
+                        iBufMax = Math.Min(buffer.Length, bytesRead) - chunkMargin;
+
+                        for (iBuf = 0; iBuf < iBufMax && pendingStructCount > 0; iBuf += sizeof(int))
                         {
-                            int iName = pendingNameIndexes[iPending];
+                            ptrVal = isGame64 ? *(ulong*)(pBuffer + iBuf) : *(uint*)(pBuffer + iBuf);
+                            structAddr = currAddr + (dword_ptr)iBuf;
 
-                            if (ptrVal == nameAddressesArr[iName])
+                            for (iPending = pendingStructCount - 1; iPending >= 0; iPending--)
                             {
-                                dvarAddresses[dvarNames[iName]] = baseAddr + (dword_ptr)iBuf + dvarValueOffset;
-                                pendingNameIndexes[iPending] = pendingNameIndexes[--pendingCount];
+                                iName = pendingStructIndexes[iPending];
+
+                                if (ptrVal == nameAddressesArr[iName])
+                                {
+                                    dvarAddresses[dvarNames[iName]] = structAddr;
+                                    pendingStructIndexes[iPending] = pendingStructIndexes[--pendingStructCount];
+                                }
                             }
                         }
                     }
                 }
             }
 
-            // Figure out the value offset via struct dvar_t's "DvarValue reset" from cg_fov
-            if (dvarValueOffset == 0)
+#if DEBUGMESSAGES
+            string structResults = string.Join("\n", dvarAddresses.Select(kvp => $"{kvp.Key}: 0x{kvp.Value:X}"));
+            MessageBox.Show($"Struct pointer search complete.\nTotal bytes read: 0x{totalBytesRead:X}\n\nResults:\n{structResults}", "Debug - Step 4: Struct Addresses Found");
+#endif
+            // Fail if any required name was not found
+            foreach (var name in requiredNames)
             {
-                if (dvarAddresses.TryGetValue("cg_fov", out var cgFovStructAddr))
+                if (!dvarAddresses.ContainsKey(name) || dvarAddresses[name] < baseAddr)
                 {
-                    int iBufCgFov = (int)(cgFovStructAddr - baseAddr);
+#if DEBUGMESSAGES
+                    MessageBox.Show($"Failed: Required dvar '{name}' was not found in memory.", "Debug - Step 4 Error");
+#endif
+                    return false;
+                }
+            }
 
+            // Figure out the value offset via struct dvar_t's "DvarValue reset" from cg_fov
+
+            if (dvarAddresses.TryGetValue("cg_fov", out var cgFovStructAddr))
+            {
+                int readLen = dvarPtrSize + 0x38;
+                if (ReadBytes(cgFovStructAddr, readLen, out byte[] fovBuffer) >= readLen)
+                {
                     for (int offset = dvarPtrSize + 0x34; offset >= 0x28; offset -= sizeof(int))
                     {
-                        if (BitConverter.ToSingle(buffer, iBufCgFov + offset) == 65f)
+                        if (BitConverter.ToSingle(fovBuffer, offset) == 65f)
                         {
-                            dvarValueOffset = (dword_ptr)(offset - 0x20); // infer "DvarValue current" offset based on "DvarValue reset", their gap is always 0x20 for these engines
+                            dvarValueOffset = (dword_ptr)(offset - 0x20);
+#if DEBUGMESSAGES
+                            MessageBox.Show($"Found default FOV value (65.0f) at offset 0x{offset:X}.\nInferred dvarValueOffset = 0x{dvarValueOffset:X}", "Debug - Step 5: Success");
+#endif
                             break;
                         }
                     }
                 }
-
-                if (dvarValueOffset == 0)
-                    return false;
-
-                // Re-adjust all offsets
-                foreach (var key in dvarAddresses.Keys.ToList())
-                {
-                    dvarAddresses[key] += dvarValueOffset;
-                }
             }
 
-            // Ensure all requiredNames were found. optionalNames missing won't fail this.
-            bool success = requiredNames.All(n => dvarAddresses.ContainsKey(n));
-            return success;
+            if (dvarValueOffset == 0)
+            {
+#if DEBUGMESSAGES
+                MessageBox.Show("Failed: Could not determine dvarValueOffset from 'cg_fov'.", "Debug - Step 5 Error");
+#endif
+                return false;
+            }
+
+            // Re-adjust all offsets
+            foreach (var key in dvarAddresses.Keys.ToList())
+            {
+                dvarAddresses[key] += dvarValueOffset;
+            }
+
+#if DEBUGMESSAGES
+            string finalAdjustedResults = string.Join("\n", dvarAddresses.Select(kvp => $"{kvp.Key}: 0x{kvp.Value:X}"));
+            MessageBox.Show($"Adjusted addresses with offset 0x{dvarValueOffset:X}:\n\n{finalAdjustedResults}", "Debug - Step 5: Adjusted Struct Addresses");
+#endif
+            return true;
         }
 
         // Type-specific wrappers

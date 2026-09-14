@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Media;
 using System.Net;
 using System.Runtime.InteropServices;
@@ -40,7 +41,7 @@ namespace MultiCoD_FoV_Changer
         public const float c_FoV = 90f;
         public const float c_FoV_vanilla = 65f;
         public const float c_FoV_lowerLimit = 65f;
-        public const float c_FoV_upperLimit = 100f;
+        public const float c_FoV_upperLimit = Constants.c_FoV_upperLimit;
 
         public const string c_checkURL = "http://agentrevcodfov.crabdance.com/";
 
@@ -162,7 +163,8 @@ namespace MultiCoD_FoV_Changer
                     if (init)
                     {
                         proc = procs[0];
-                        lblGameStatus.Text = proc.ProcessName + ".exe 🕓";
+                        lblGameStatus.Text = proc.ProcessName + ".exe ⌚";
+                        lblGameStatus.Refresh();
 #if !DEBUG
                         try
                         {
@@ -176,7 +178,7 @@ namespace MultiCoD_FoV_Changer
                             Application.Exit();
                         }
 #endif
-                        TimerVerif.Start();
+                        CheckDvarAddresses();
                     }
                     return true;
                 }
@@ -194,7 +196,7 @@ namespace MultiCoD_FoV_Changer
         private Keys currentKey;
 
         //#####################################################################################################################
-#endregion
+        #endregion
 
         public MainForm()
         {
@@ -205,9 +207,26 @@ namespace MultiCoD_FoV_Changer
             InitFovChanger();
             saveSettings = true;
 
-            ProcessModule objCurrentModule = Process.GetCurrentProcess().MainModule;
-            objKeyboardProcess = new LowLevelKeyboardProc(captureKey);
-            ptrHook = SetWindowsHookEx(13, objKeyboardProcess, GetModuleHandle(objCurrentModule.ModuleName), 0);
+            try
+            {
+                // GetModuleHandle(null) gets the executable module handle directly 
+                // without invoking Process.GetCurrentProcess().MainModule
+                IntPtr hInstance = GetModuleHandle(null);
+                objKeyboardProcess = new LowLevelKeyboardProc(captureKey);
+                ptrHook = SetWindowsHookEx(13, objKeyboardProcess, hInstance, 0);
+            }
+            catch //(Exception e)
+            {
+                chkHotkeys.Text = "Hotkeys unsupported by OS";
+                chkHotkeys.Enabled = false;
+                chkHotkeys.Checked = false;
+
+                btnKeyZoomOut.Enabled = false;
+                btnKeyZoomIn.Enabled = false;
+                btnKeyReset.Enabled = false;
+
+                //ToolTip1.SetToolTip(chkHotkeys, $"Failed to set global keyboard hook. Hotkeys will not work.\n\n{e}");
+            }
 
             TimerCheck.Start();
         }
@@ -523,7 +542,7 @@ namespace MultiCoD_FoV_Changer
 
             if (proc != null)
             {
-                lblGameStatus.Text = proc.ProcessName + ".exe ✔️";
+                lblGameStatus.Text = proc.ProcessName + ".exe ✔";
                 lblGameStatus.ForeColor = Color.ForestGreen;
                 lblGameStatus.Refresh();
             }
@@ -537,6 +556,7 @@ namespace MultiCoD_FoV_Changer
             TimerVerif.Stop();
             TimerUpdate.Stop();
 
+            lblGameStatus.Text = "Stopping.";
             lblGameStatus.ForeColor = DefaultForeColor;
             lblGameStatus.Refresh();
 
@@ -773,40 +793,44 @@ namespace MultiCoD_FoV_Changer
             isRunning(true);
         }
 
-        private void TimerVerif_Tick(object sender, EventArgs e)
+        private void CheckDvarAddresses()
         {
             if (proc != null && isRunning())
             {
                 proc.Refresh();
-#if !DEBUG
-                try
+
+                if (!proc.HasExited)
                 {
-#endif
-                    if (!proc.HasExited && proc.WorkingSet64 > Constants.c_memReadRange)
+#if !DEBUG
+                    try
                     {
-#if !DEBUG
-                        try
-                        {
 #endif
-                            if (Memory.FindDvarAddresses(new[] { "cg_fov", "com_maxfps" }, new[] { "cg_fovScale", "data_validation_allow_drop" }))
-                            {
-                                pFoV = Memory.dvarAddresses["cg_fov"];
-                                progStart();
-                            }
-#if !DEBUG
-                        }
-                        catch (Exception ex)
+                        TimerVerif.Stop();
+
+                        if (Memory.FindDvarAddresses(new[] { "cg_fov", "com_maxfps" }, new[] { "cg_fovScale", "data_validation_allow_drop" }))
                         {
-                            ErrMessage(ex);
-                            Application.Exit(); 
+                            pFoV = Memory.dvarAddresses["cg_fov"];
+                            progStart();
                         }
-#endif
+                        else
+                        {
+                            TimerVerif.Start();
+                        }
+#if !DEBUG
                     }
-#if !DEBUG
-                }
-                catch (InvalidOperationException) { }
+                    catch (Exception ex)
+                    {
+                        ErrMessage(ex);
+                        Application.Exit(); 
+                    }
 #endif
+                }
             }
+        }
+
+        private void TimerVerif_Tick(object sender, EventArgs e)
+        {
+            CheckDvarAddresses();
         }
 
         private void UpdateResponse(IAsyncResult result)
@@ -951,13 +975,20 @@ namespace MultiCoD_FoV_Changer
 
         private void btnAbout_Click(object sender, EventArgs e)
         {
+            string dvarList = "";
+
+            if (Memory.dvarAddresses != null && Memory.dvarAddresses.Count > 0)
+            {
+                dvarList = $"\nCurrent dvar pointers:\nbase address = 0x{Memory.baseAddr:X}\n" + string.Join("\n", Memory.dvarAddresses.Select(kvp => $"{kvp.Key} = 0x{kvp.Value:X}")) + "\n";
+            }
+
             MessageBox.Show(this, this.Text + " v" + c_toolVer + "\n" +
                                   "Made by AgentRev\n" +
-                                  "agentrevo@gmail.com\n",
-                                  "About", MessageBoxButtons.OK, MessageBoxIcon.Information, 
+                                  "agentrevo@gmail.com\n" +
+                                  dvarList,
+                                  "About", MessageBoxButtons.OK, MessageBoxIcon.Information,
                                   MessageBoxDefaultButton.Button1, 0,
                                   "https://github.com/AgentRev/CoD-FoV-Changers/issues");
-
         }
 
         private void btnExit_Click(object sender, EventArgs e)
@@ -967,7 +998,7 @@ namespace MultiCoD_FoV_Changer
 
         private void btnReset_Click(object sender, EventArgs e)
         {
-            SetFoV(c_FoV);
+            SetFoV(c_FoV_vanilla);
         }
 
         private void UpdateCheck()
@@ -1008,7 +1039,18 @@ namespace MultiCoD_FoV_Changer
 
         private void lblLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            Process.Start("https://github.com/AgentRev/CoD-FoV-Changers");
+            var url = "https://github.com/AgentRev/CoD-FoV-Changers";
+
+            if (Environment.OSVersion.Platform == PlatformID.Unix)
+            {
+                // Mono on macOS returns PlatformID.Unix as well
+                string launcher = Environment.OSVersion.VersionString.Contains("Darwin") ? "open" : "xdg-open";
+                Process.Start(launcher, url);
+            }
+            else
+            {
+                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            }
         }
 
         private void chkHotkeys_CheckedChanged(object sender, EventArgs e)

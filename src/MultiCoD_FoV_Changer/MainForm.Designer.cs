@@ -158,6 +158,7 @@ namespace MultiCoD_FoV_Changer
             this.btnReset.Size = new System.Drawing.Size(24, 24);
             this.btnReset.TabIndex = 1;
             this.btnReset.Text = "*";
+            this.btnReset.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             this.ToolTip1.SetToolTip(this.btnReset, "Reset to default");
             this.btnReset.UseVisualStyleBackColor = true;
             this.btnReset.Click += new System.EventHandler(this.btnReset_Click);
@@ -192,13 +193,11 @@ namespace MultiCoD_FoV_Changer
             this.lblLink.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
             this.lblLink.Location = new System.Drawing.Point(43, 302);
             this.lblLink.Margin = new System.Windows.Forms.Padding(0);
-            this.lblLink.MaximumSize = new System.Drawing.Size(260, 0);
             this.lblLink.Name = "lblLink";
             this.lblLink.Size = new System.Drawing.Size(208, 13);
             this.lblLink.TabIndex = 18;
             this.lblLink.TabStop = true;
             this.lblLink.Text = "github.com/AgentRev/CoD-FoV-Changers";
-            this.lblLink.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             this.lblLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lblLink_LinkClicked);
             // 
             // chkUpdate
@@ -217,13 +216,14 @@ namespace MultiCoD_FoV_Changer
             // 
             // lblUpdateAvail
             // 
+            this.lblUpdateAvail.AutoSize = true;
             this.lblUpdateAvail.BackColor = System.Drawing.SystemColors.Control;
             this.lblUpdateAvail.Enabled = false;
             this.lblUpdateAvail.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblUpdateAvail.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(180)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.lblUpdateAvail.Location = new System.Drawing.Point(18, 280);
+            this.lblUpdateAvail.Location = new System.Drawing.Point(75, 280);
             this.lblUpdateAvail.Name = "lblUpdateAvail";
-            this.lblUpdateAvail.Size = new System.Drawing.Size(258, 13);
+            this.lblUpdateAvail.Size = new System.Drawing.Size(144, 13);
             this.lblUpdateAvail.TabIndex = 12;
             this.lblUpdateAvail.Text = "Update v1.x.xxx.x available";
             this.lblUpdateAvail.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -306,13 +306,13 @@ namespace MultiCoD_FoV_Changer
             // 
             // lblGameStatus
             // 
-            this.lblGameStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblGameStatus.Location = new System.Drawing.Point(6, 11);
+            this.lblGameStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblGameStatus.Location = new System.Drawing.Point(5, 11);
             this.lblGameStatus.Name = "lblGameStatus";
-            this.lblGameStatus.Size = new System.Drawing.Size(258, 31);
+            this.lblGameStatus.Size = new System.Drawing.Size(260, 31);
             this.lblGameStatus.TabIndex = 21;
             this.lblGameStatus.Text = "Awaiting game...";
-            this.lblGameStatus.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblGameStatus.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             this.ToolTip1.SetToolTip(this.lblGameStatus, "Start a mission or join a match! Compatible with:\nMW1 \'07, WaW, MW2 \'09, BO1, MW3" +
         " \'11, BO2, Ghosts, AW");
             // 
@@ -382,8 +382,7 @@ namespace MultiCoD_FoV_Changer
             // 
             // MainForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.ClientSize = new System.Drawing.Size(294, 366);
             this.Controls.Add(this.numFPS);
             this.Controls.Add(this.lblFPS);
