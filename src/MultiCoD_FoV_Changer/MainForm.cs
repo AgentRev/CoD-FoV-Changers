@@ -18,37 +18,19 @@ namespace MultiCoD_FoV_Changer
 {
     using dword_ptr = UInt64;
 
-    #region struct KeyHook
-
-    [StructLayout(LayoutKind.Sequential)]
-    public struct KeyHook
-    {
-        public Keys Key;
-        public int Code;
-        public int flags;
-        public int time;
-        public IntPtr extra;
-    }
-
-    #endregion
-
     public partial class MainForm : Form
     {
         #region constants
 
-        public const string c_toolVer = "4.00.17.3";
+        public const string c_toolVer = "4.00.17.5";
 
         public const float c_FoV = 90f;
         public const float c_FoV_vanilla = 65f;
-        public const float c_FoV_lowerLimit = 65f;
         public const float c_FoV_upperLimit = Constants.c_FoV_upperLimit;
 
         public const string c_checkURL = "http://agentrevcodfov.crabdance.com/";
 
-        public const bool c_doBeep = true;
-        public const bool c_updateNotify = true;
-        public const bool c_hotKeys = true;
-        public static Keys[] c_catchKeys = { Keys.Subtract, Keys.Add, Keys.Multiply };
+        public static Keys[] c_catchKeys = { Keys.Subtract, Keys.Add, Keys.Multiply, Keys.Divide };
 
         #endregion
 
@@ -58,37 +40,23 @@ namespace MultiCoD_FoV_Changer
         static string settingsFile = Path.Combine(settingsPath, Constants.c_settingsFileName);
 
         dword_ptr pFoV = 0;
-        float fFoV;
+        float fFoV = c_FoV;
+        float fFoVScale = 1;
         int maxFPS;
-        bool doBeep;
-        bool updateNotify;
-        bool hotKeys;
-        Keys[] catchKeys;
+        Keys[] catchKeys; // 0 = Zoom out, 1 = Zoom in, 2 = Reset, 3 = On/Off
 
         bool saveSettings = true;
         bool writeAllowed = false;
         bool currentlyReading = false;
         bool updateAvailable = false;
-        
+        bool fovEnabled = true;
+
         #endregion
 
         #region vars for hooks 'n other stuff
         //#####################################################################################################################
 
-        private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern IntPtr SetWindowsHookEx(int id, LowLevelKeyboardProc callback, IntPtr hMod, uint dwThreadId);
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern bool UnhookWindowsHookEx(IntPtr hook);
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern IntPtr CallNextHookEx(IntPtr hook, int nCode, IntPtr wp, IntPtr lp);
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern IntPtr GetModuleHandle(string name);
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        private static extern short GetAsyncKeyState(Keys key);
-        private LowLevelKeyboardProc objKeyboardProcess;
-        private IntPtr ptrHook;
-        private KeyHook theKey;
+        private readonly RawInputListener inputListener = new RawInputListener();
 
         private HttpWebRequest request;
         private bool requestSent;
@@ -134,54 +102,126 @@ namespace MultiCoD_FoV_Changer
             sndGameLost.Load();
         }
 
-        bool isRunning(bool init = false)
+        private void UpdateKeyListener()
+        {
+            if (chkHotkeys.Checked)
+                inputListener.Start();
+            else
+                inputListener.Stop();
+        }
+
+        private void OnKeyEvent(Keys key, bool pressed)
+        {
+            if (!catchKeys.Contains(key))
+                return;
+
+            if (pressed && currentKey != key)
+            {
+                TimerReset();
+                currentKey = key;
+                ProcessCurrentKey();
+                TimerHoldKey.Start();
+            }
+            else if (!pressed && currentKey == key)
+            {
+                if (key == catchKeys[3] && cbKeyOffOnMode.SelectedIndex == 1) // "Hold" release
+                    SetFoVEnabled(true);
+
+                TimerReset();
+                currentKey = Keys.None;
+
+                //var iCatchKeys = Array.IndexOf(catchKeys, key);
+                //if (iCatchKeys >= 0 && iCatchKeys <= 2)
+                //    SaveSettings();
+            }
+        }
+
+        bool CheckGameRunning(bool resetProc = false)
         {
             if (proc != null)
             {
                 try
                 {
-                    proc.Refresh();
-                    if (proc.HasExited)
+                    //proc.Refresh();
+                    if (!proc.HasExited)
                     {
-                        progStop();
-                        return false;
+                        return true;
                     }
-                    return true;
                 }
-                catch
+                catch { }
+
+                if (resetProc)
                 {
-                    progStop();
-                    return false;
+                    proc = null;
                 }
             }
+
+            return false;
+        }
+
+        string GetGameProcName()
+        {
+            if (proc != null)
+            {
+                try { return proc.MainModule.ModuleName; } catch { }
+                try { return proc.ProcessName; } catch { }
+            }
+
+            return "";
+        }
+
+        static List<Process> FindGameProcesses()
+        {
+            var found = new List<Process>();
 
             foreach (string exe in Constants.c_exes)
             {
                 Process[] procs = Process.GetProcessesByName(exe);
                 if (procs.Length > 0)
                 {
-                    if (init)
-                    {
-                        proc = procs[0];
-                        lblGameStatus.Text = proc.ProcessName + ".exe ⌚";
-                        lblGameStatus.Refresh();
-#if !DEBUG
-                        try
-                        {
-#endif
-                            Memory.Init(proc);
-#if !DEBUG
-                        }
-                        catch (Exception ex)
-                        {
-                            ErrMessage(ex);
-                            Application.Exit();
-                        }
-#endif
-                        CheckDvarAddresses();
-                    }
+                    found.Add(procs[0]);
+                }
+            }
+
+            return found;
+        }
+
+        // candidates: result of a previous FindGameProcesses call (e.g. run on a background thread)
+        bool FindGame(bool init = false, IList<Process> candidates = null)
+        {
+            if (proc != null)
+            {
+                if (CheckGameRunning(true))
+                {
                     return true;
                 }
+
+                progStop();
+                return false;
+            }
+
+            foreach (Process candidate in candidates ?? FindGameProcesses())
+            {
+                if (init)
+                {
+                    proc = candidate;
+
+                    if (!CheckGameRunning(true))
+                    {
+                        continue;
+                    }
+
+                    string procName = GetGameProcName();
+                    if (procName == "")
+                    {
+                        continue;
+                    }
+
+                    lblGameStatus.Text = procName + " " + (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "⏰" : "↻");
+                    lblGameStatus.Refresh();
+                }
+
+                return true;
             }
 
             return false;
@@ -207,15 +247,20 @@ namespace MultiCoD_FoV_Changer
             InitFovChanger();
             saveSettings = true;
 
-            try
+            FormClosed += (s, e) =>
+                SaveSettings();
+
+            try // setup input listener
             {
-                // GetModuleHandle(null) gets the executable module handle directly 
-                // without invoking Process.GetCurrentProcess().MainModule
-                IntPtr hInstance = GetModuleHandle(null);
-                objKeyboardProcess = new LowLevelKeyboardProc(captureKey);
-                ptrHook = SetWindowsHookEx(13, objKeyboardProcess, hInstance, 0);
+                inputListener.KeyboardAction += OnKeyEvent;
+                inputListener.MouseAction += OnKeyEvent;
+
+                UpdateKeyListener();
+
+                FormClosed += (s, e) =>
+                    inputListener.Stop();
             }
-            catch //(Exception e)
+            catch
             {
                 chkHotkeys.Text = "Hotkeys unsupported by OS";
                 chkHotkeys.Enabled = false;
@@ -224,11 +269,10 @@ namespace MultiCoD_FoV_Changer
                 btnKeyZoomOut.Enabled = false;
                 btnKeyZoomIn.Enabled = false;
                 btnKeyReset.Enabled = false;
-
-                //ToolTip1.SetToolTip(chkHotkeys, $"Failed to set global keyboard hook. Hotkeys will not work.\n\n{e}");
+                btnKeyOffOn.Enabled = false;
             }
 
-            TimerCheck.Start();
+            TimerVerif.Start();
         }
 
         #region save/read settings
@@ -266,6 +310,10 @@ namespace MultiCoD_FoV_Changer
                                 {
                                     SetFoV(float.Parse(varValue));
                                 }
+                                else if (varName == "FoVScale")
+                                {
+                                    SetFoVScale(float.Parse(varValue));
+                                }
                                 else if (varName == "FoVOffset")
                                 {
                                     // unused, overwritten every time
@@ -274,10 +322,6 @@ namespace MultiCoD_FoV_Changer
                                 else if (varName == "MaxFPS")
                                 {
                                     SetFPS(int.Parse(varValue));
-                                }
-                                else if (varName == "UseFovScale")
-                                {
-                                    chkFovScale.Checked = bool.Parse(varValue);
                                 }
                                 else if (varName == "UpdateNotify")
                                 {
@@ -301,6 +345,15 @@ namespace MultiCoD_FoV_Changer
                                 {
                                     catchKeys[2] = (Keys)int.Parse(varValue);
                                     btnKeyReset.Text = VirtualKeyName(catchKeys[2]);
+                                }
+                                else if (varName == "HotkeyOffOn")
+                                {
+                                    catchKeys[3] = (Keys)int.Parse(varValue);
+                                    btnKeyOffOn.Text = VirtualKeyName(catchKeys[3]);
+                                }
+                                else if (varName == "OffOnMode")
+                                {
+                                    cbKeyOffOnMode.SelectedIndex = int.Parse(varValue);
                                 }
                             }
                         }
@@ -337,14 +390,16 @@ namespace MultiCoD_FoV_Changer
                             sw.WriteLine("ToolVersion=" + c_toolVer);
                             sw.WriteLine("Beep=" + chkBeep.Checked);
                             sw.WriteLine("FoV=" + fFoV);
-                            sw.WriteLine("FoVOffset=" + pFoV.ToString("x"));
+                            sw.WriteLine("FoVScale=" + fFoVScale);
+                            //sw.WriteLine("FoVOffset=" + pFoV.ToString("x"));
                             sw.WriteLine("MaxFPS=" + maxFPS);
-                            sw.WriteLine("UseFovScale=" + chkFovScale.Checked);
                             sw.WriteLine("UpdateNotify=" + chkUpdate.Checked);
                             sw.WriteLine("EnableHotkeys=" + chkHotkeys.Checked);
                             sw.WriteLine("HotkeyIncrease=" + (int)catchKeys[0]);
                             sw.WriteLine("HotkeyDecrease=" + (int)catchKeys[1]);
                             sw.WriteLine("HotkeyReset=" + (int)catchKeys[2]);
+                            sw.WriteLine("HotkeyOffOn=" + (int)catchKeys[3]);
+                            sw.WriteLine("OffOnMode=" + cbKeyOffOnMode.SelectedIndex);
                         }
                     }
                     catch
@@ -373,13 +428,9 @@ namespace MultiCoD_FoV_Changer
             settingsFile = Path.Combine(settingsPath, Constants.c_settingsFileName);
 
             fFoV = c_FoV;
-            doBeep = c_doBeep;
-            updateNotify = c_updateNotify;
-            hotKeys = c_hotKeys;
             catchKeys = (Keys[])c_catchKeys.Clone();
 
-            this.numFoV.Maximum = Convert.ToDecimal(c_FoV_upperLimit);
-            this.numFoV.Minimum = Convert.ToDecimal(c_FoV_lowerLimit);
+            this.cbKeyOffOnMode.SelectedIndex = 0; // "Toggle"
 
             if (File.Exists(settingsFile)) ReadSettings();
 
@@ -388,57 +439,101 @@ namespace MultiCoD_FoV_Changer
 
             numFoV.Value = Convert.ToDecimal(fFoV);
             numFoV.Enabled = true;
+            numFoVScale.Value = Convert.ToDecimal(fFoVScale);
+            numFoVScale.Enabled = true;
+            UpdateEffectiveFoV();
+
+            lblEffectiveFoVMax.Text = "(max " + c_FoV_upperLimit.ToString("0.#", CultureInfo.CurrentCulture) + ")";
+
+            foreach (NumericUpDown num in new[] { numFoV, numFPS, numFoVScale })
+            {
+                num.KeyDown += (s, e) =>
+                {
+                    if (e.KeyCode == Keys.Enter || e.KeyCode == Keys.Escape)
+                    {
+                        e.SuppressKeyPress = true; // disable ding sound
+                    }
+                };
+            }
         }
 
-        private void UpdateMem()
+        private void SetFoVEnabled(bool enable)
         {
-            if (currentKey == catchKeys[0])
+            if (fovEnabled == enable)
+                return;
+
+            fovEnabled = enable;
+
+            if (!CheckGameRunning() || !writeAllowed)
+                return;
+
+            try
+            {
+                if (fovEnabled)
+                {
+                    UpdateFoV();
+                }
+                else
+                {
+                    Memory.ResetDvar("cg_fov");
+
+                    if (Memory.dvarAddresses.ContainsKey("cg_fovScale"))
+                        Memory.ResetDvar("cg_fovScale");
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrMessage(ex);
+                Application.Exit();
+            }
+        }
+
+        private void ProcessCurrentKey(bool isRepeat = false)
+        {
+            if (currentKey == catchKeys[0]) // "Zoom out"
                 SetFoV(fFoV + 1);
-            else if (currentKey == catchKeys[1])
+
+            if (currentKey == catchKeys[1]) // "Zoom in"
                 SetFoV(fFoV - 1);
-            else if (currentKey == catchKeys[2])
+
+            if (currentKey == catchKeys[2]) // "Reset to default"
                 SetFoV(c_FoV_vanilla);
+
+            if (currentKey == catchKeys[3] && !isRepeat) // "Off / On"
+            {
+                if (cbKeyOffOnMode.SelectedIndex == 1) // "Hold"
+                    SetFoVEnabled(false);
+                else // "Toggle"
+                    SetFoVEnabled(!fovEnabled);
+            }
         }
 
         private void WriteFoV(float val)
         {
-            if (proc != null && isRunning())
+            if (CheckGameRunning())
             {
-                var hasFovScale = Memory.dvarAddresses.ContainsKey("cg_fovScale");
-
-                if (chkFovScale.Checked && hasFovScale)
-                {
-                    Memory.ResetDvar("cg_fov");
-                    Memory.WriteFloat("cg_fovScale", val / 65f);
-                }
-                else
-                {
-                    if (hasFovScale) Memory.ResetDvar("cg_fovScale");
-                    Memory.WriteFloat("cg_fov", val);
-                }
+                Memory.WriteFloat("cg_fov", val);
             }
         }
 
         private void SetFoV(float val)
         {
+            var oldVal = fFoV;
             bool reset = val < 0;
 
             if (!reset)
             {
-                if (val < c_FoV_lowerLimit)
-                    fFoV = c_FoV_lowerLimit;
-                else if (val > c_FoV_upperLimit)
-                    fFoV = c_FoV_upperLimit;
-                else
+                if (val * fFoVScale > c_FoV_upperLimit)
+                    val = c_FoV_upperLimit / fFoVScale;
+
+                if (val >= Convert.ToSingle(numFoV.Minimum) && val <= Convert.ToSingle(numFoV.Maximum))
                     fFoV = val;
             }
-            else
-                SaveSettings();
 #if !DEBUG
             try
             {
 #endif
-                if (proc != null && isRunning() && writeAllowed)
+                if (CheckGameRunning() && writeAllowed && fovEnabled)
                 {
                     WriteFoV(reset ? c_FoV_vanilla : fFoV);
                 }
@@ -452,13 +547,62 @@ namespace MultiCoD_FoV_Changer
 #endif
             if (!reset)
             {
-                numFoV.Value = Convert.ToDecimal(fFoV);
-                SaveSettings();
+                if (numFoV.Value != Convert.ToDecimal(fFoV))
+                    numFoV.Value = Convert.ToDecimal(fFoV);
+            }
+
+            UpdateEffectiveFoV();
+        }
+
+        private void WriteFoVScale(float val)
+        {
+            if (CheckGameRunning() && Memory.dvarAddresses.ContainsKey("cg_fovScale"))
+            {
+                Memory.WriteFloat("cg_fovScale", val);
             }
         }
+
+        private void SetFoVScale(float val)
+        {
+            var oldVal = fFoVScale;
+            bool reset = val < 0;
+
+            if (!reset)
+            {
+                if (val * fFoV > c_FoV_upperLimit)
+                    val = c_FoV_upperLimit / fFoV;
+
+                if (val >= Convert.ToSingle(numFoVScale.Minimum) && val <= Convert.ToSingle(numFoVScale.Maximum))
+                    fFoVScale = val;
+            }
+#if !DEBUG
+            try
+            {
+#endif
+                if (CheckGameRunning() && writeAllowed && fovEnabled)
+                {
+                    WriteFoVScale(reset ? 1 : fFoVScale);
+                }
+#if !DEBUG
+            }
+            catch (Exception ex)
+            {
+                ErrMessage(ex);
+                Application.Exit();
+            }
+#endif
+            if (!reset)
+            {
+                if (numFoVScale.Value != Convert.ToDecimal(fFoVScale))
+                    numFoVScale.Value = Convert.ToDecimal(fFoVScale);
+            }
+
+            UpdateEffectiveFoV();
+        }
+
         private void WriteFPS(int val)
         {
-            if (proc != null && isRunning())
+            if (CheckGameRunning())
             {
                 if (val >= 0)
                 {
@@ -479,6 +623,7 @@ namespace MultiCoD_FoV_Changer
 
         private void SetFPS(int val)
         {
+            var oldVal = maxFPS;
             bool reset = val < 0;
 
             if (!reset)
@@ -490,13 +635,11 @@ namespace MultiCoD_FoV_Changer
                 else
                     maxFPS = val;
             }
-            else
-                SaveSettings();
 #if !DEBUG
             try
             {
 #endif
-                if (proc != null && isRunning() && writeAllowed)
+                if (CheckGameRunning() && writeAllowed)
                 {
                     WriteFPS(reset ? -1 : maxFPS);
                 }
@@ -511,18 +654,22 @@ namespace MultiCoD_FoV_Changer
 
             if (!reset)
             {
-                numFPS.Value = Convert.ToDecimal(maxFPS);
-                SaveSettings();
+                if (numFPS.Value != Convert.ToDecimal(maxFPS))
+                    numFPS.Value = Convert.ToDecimal(maxFPS);
             }
         }
 
         private void UpdateNumBox()
         {
             SetFoV(Convert.ToSingle(numFoV.Value));
-        }
-        private void UpdateNumBoxFPS()
-        {
+            SetFoVScale(Convert.ToSingle(numFoVScale.Value));
             SetFPS(Convert.ToInt32(numFPS.Value));
+            //SaveSettings();
+        }
+
+        void UpdateEffectiveFoV()
+        {
+            lblEffectiveFoVNum.Text = (fFoV * fFoVScale).ToString("0.0");
         }
 
         private void progStart()
@@ -540,27 +687,29 @@ namespace MultiCoD_FoV_Changer
             UpdateNumBox();
             TimerUpdate.Start();
 
-            if (proc != null)
+            if (CheckGameRunning())
             {
-                lblGameStatus.Text = proc.ProcessName + ".exe ✔";
+                string procName = GetGameProcName();
+                if (procName == "") return;
+
+                lblGameStatus.Text = procName + " ✔";
                 lblGameStatus.ForeColor = Color.ForestGreen;
                 lblGameStatus.Refresh();
-            }
 
-            if (doBeep && sndGameFound != null)
-                sndGameFound.Play();
+                if (chkBeep.Checked && sndGameFound != null)
+                    sndGameFound.Play();
+            }
         }
 
         private void progStop()
         {
-            TimerVerif.Stop();
             TimerUpdate.Stop();
 
             lblGameStatus.Text = "Stopping.";
             lblGameStatus.ForeColor = DefaultForeColor;
             lblGameStatus.Refresh();
 
-            if (writeAllowed && doBeep && sndGameLost != null)
+            if (writeAllowed && chkBeep.Checked && sndGameLost != null)
             {
                 try
                 {
@@ -572,12 +721,15 @@ namespace MultiCoD_FoV_Changer
                 }
             }
 
+            //SetFoV(-1);
+            //SetFPS(-1);
+
             writeAllowed = false;
             proc = null;
             Memory.Reset();
 
-            SetFoV(-1);
             lblGameStatus.Text = "Awaiting game...";
+            TimerVerif.Start();
         }
 
         private long VersionNum(string data)
@@ -601,6 +753,9 @@ namespace MultiCoD_FoV_Changer
         {
             switch (theKey)
             {
+                case Keys.LButton: return "LClick";
+                case Keys.RButton: return "RClick";
+                case Keys.MButton: return "MClick";
                 case Keys.Back: return "Backspace";
                 //case 9: return "Tab";
                 //case 13: return "Enter";
@@ -656,17 +811,35 @@ namespace MultiCoD_FoV_Changer
         [DllImport("user32.dll", SetLastError = true)]
         public static extern uint MapVirtualKey(uint uCode, uint uMapType);
 
-        public static string VirtualKeyName(Keys theKey)
+        public static string VirtualKeyName(Keys key)
         {
-            uint nonVirtualKey = MapVirtualKey((uint)theKey, 2);
+            // Mode 2 = MAPVK_VK_TO_CHAR: Translates a virtual key into an unshifted character value
+            const uint MAPVK_VK_TO_CHAR = 2;
+            const uint DEAD_KEY_MASK = 0x80000000;
 
-            if (nonVirtualKey > 0x80000000)
-                nonVirtualKey -= 0x80000000; //UTF8 black magic
+            uint rawCharacterValue = MapVirtualKey((uint)key, MAPVK_VK_TO_CHAR);
 
-            if (nonVirtualKey > 0 && theKey > Keys.Enter && (theKey < Keys.NumPad0 || theKey > Keys.Divide))
-                return Convert.ToChar(nonVirtualKey).ToString().ToUpper();
+            // If the high bit is set, it's a dead key (e.g., an accent placeholder). 
+            // Strip the mask bit to extract the actual character code.
+            if (rawCharacterValue > DEAD_KEY_MASK)
+            {
+                rawCharacterValue -= DEAD_KEY_MASK;
+            }
 
-            else return KeyName(theKey);
+            // Verify a valid character mapping exists
+            bool isMappedChar = rawCharacterValue > 0;
+
+            // Ensure the key falls inside standard alpha-numeric zones, bypassing complex Numpad blocks
+            bool isStandardTypingKey = key >= Keys.D0 && (key < Keys.NumPad0 || key > Keys.Divide);
+
+            if (isMappedChar && isStandardTypingKey)
+            {
+                char character = (char)rawCharacterValue;
+                return character.ToString().ToUpperInvariant();
+            }
+
+            // Fallback for special function keys (e.g., Escape, Control, Backspace)
+            return KeyName(key);
         }
 
         private void ChgKey(uint key, string desc, Button btn)
@@ -707,68 +880,39 @@ namespace MultiCoD_FoV_Changer
                                   "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
-#endregion
-
-        private IntPtr captureKey(int nCode, IntPtr wp, IntPtr lp)
-        {
-            //using (StreamWriter sw = File.AppendText("keys.log"))
-            //{
-                //sw.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") + "  nCode=" + nCode);
-
-                if (nCode >= 0) //(proc != null && nCode >= 0)
-                {
-                    theKey = (KeyHook)Marshal.PtrToStructure(lp, typeof(KeyHook));
-                    // Keyboard Hook Time /////////////////////////////////////////////////////////////////////////////////////////
-
-                    //if (theKey.flags < 128) MessageBox.Show(theKey.key.ToString() + "\n" + ((int)theKey.key).ToString());
-
-                    //sw.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") + "  key=" + (int)theKey.Key + " code=" + theKey.Code + " flags=" + theKey.flags + " extra=" + theKey.extra);
-
-                    if (hotKeys && ((IList<Keys>)catchKeys).Contains(theKey.Key))
-                    {
-                        if (theKey.flags < 128 && currentKey != theKey.Key)
-                        {
-                            TimerReset();
-                            currentKey = theKey.Key;
-                            UpdateMem();
-                            TimerHoldKey.Start();
-                        }
-                        else if (theKey.flags >= 128)
-                        {
-                            TimerReset();
-                            currentKey = Keys.None;
-                            SaveSettings();
-                        }
-                    }
-
-                    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                }
-                return CallNextHookEx(ptrHook, nCode, wp, lp);
-
-            //}
-        }
+        #endregion
 
         #region timers
 
         private void TimerHoldKey_Tick(object sender, EventArgs e)
         {
             if (TimerHoldKey.Interval == 350) TimerHoldKey.Interval = 35;
-            UpdateMem();
+            ProcessCurrentKey(true);
         }
 
-        private void TimerUpdate_Tick(object sender, EventArgs e)
+        private void UpdateFoV()
         {
 #if !DEBUG
             try
             {
 #endif
-                if (proc != null && isRunning())
+                if (FindGame())
                 {
                     float readValue = Memory.ReadFloat("cg_fov");
 
-                    if (readValue != fFoV && readValue >= c_FoV_lowerLimit)
+                    if (fovEnabled && readValue != fFoV)
                     {
                         WriteFoV(fFoV);
+                    }
+
+                    if (fovEnabled && Memory.dvarAddresses.ContainsKey("cg_fovScale"))
+                    {
+                        float readFoVScale = Memory.ReadFloat("cg_fovScale");
+
+                        if (readFoVScale != fFoVScale)
+                        {
+                            WriteFoVScale(fFoVScale);
+                        }
                     }
 
                     int readFPS = Memory.ReadInt("com_maxfps");
@@ -788,49 +932,84 @@ namespace MultiCoD_FoV_Changer
 #endif
         }
 
+        private void TimerUpdate_Tick(object sender, EventArgs e)
+        {
+            UpdateFoV();
+        }
+
         private void TimerCheck_Tick(object sender, EventArgs e)
         {
-            isRunning(true);
+            // noop
         }
 
-        private void CheckDvarAddresses()
+        private async System.Threading.Tasks.Task CheckDvarAddresses()
         {
-            if (proc != null && isRunning())
+            TimerVerif.Stop();
+
+            if (CheckGameRunning())
             {
-                proc.Refresh();
+                var p = proc;
 
-                if (!proc.HasExited)
+#if !DEBUG
+                try
                 {
-#if !DEBUG
-                    try
-                    {
 #endif
-                        TimerVerif.Stop();
+                    bool found = await System.Threading.Tasks.Task.Run(() =>
+                    {
+                        var memUsage = Memory.GetWorkingSet64(p);
 
-                        if (Memory.FindDvarAddresses(new[] { "cg_fov", "com_maxfps" }, new[] { "cg_fovScale", "data_validation_allow_drop" }))
+                        if (memUsage > 512 * 0x100000 || memUsage == 0) // wait for 512 MB RAM usage before first scan (or proceed anyway if usage unavailable)
                         {
-                            pFoV = Memory.dvarAddresses["cg_fov"];
-                            progStart();
+                            Memory.Init(p);
+                            return Memory.FindDvarAddresses(new[] { "cg_fov", "com_maxfps" }, new[] { "cg_fovScale", "data_validation_allow_drop" });
                         }
-                        else
-                        {
-                            TimerVerif.Start();
-                        }
-#if !DEBUG
-                    }
-                    catch (Exception ex)
+
+                        return false;
+                    });
+
+                    if (found && CheckGameRunning())
                     {
-                        ErrMessage(ex);
-                        Application.Exit(); 
+                        pFoV = Memory.dvarAddresses["cg_fov"];
+                        progStart();
+                        return;
                     }
+#if !DEBUG
+                }
+                catch (Exception ex)
+                {
+                    ErrMessage(ex);
+                    Application.Exit();
+                    return;
+                }
 #endif
+            }
+
+            TimerVerif.Start();
+        }
+
+        private bool verifBusy;
+
+        private async void TimerVerif_Tick(object sender, EventArgs e)
+        {
+            if (verifBusy) return;
+            verifBusy = true;
+
+            try
+            {
+                // process enumeration is slow and would stall the hook thread (UI), freezing the mouse
+                List<Process> candidates = proc == null
+                    ? await System.Threading.Tasks.Task.Run(() => FindGameProcesses())
+                    : null;
+
+                if (FindGame(true, candidates))
+                {
+                    await CheckDvarAddresses();
                 }
             }
-        }
-
-        private void TimerVerif_Tick(object sender, EventArgs e)
-        {
-            CheckDvarAddresses();
+            finally
+            {
+                verifBusy = false;
+            }
         }
 
         private void UpdateResponse(IAsyncResult result)
@@ -886,7 +1065,7 @@ namespace MultiCoD_FoV_Changer
                     {
                         updateAvailable = true;
 
-                        if (chkUpdate.Checked && updateNotify)
+                        if (chkUpdate.Checked)
                         {
                             MessageBox.Show(this, "Update v" + dataVer + " is available on GitHub.\nClicking the \"Help\" button below will take you to the download page." + (!String.IsNullOrEmpty(dataInfo) ? "\n\nInfos:\n" + dataInfo : ""),
                                                   "Update available", MessageBoxButtons.OK, MessageBoxIcon.Information,
@@ -925,11 +1104,20 @@ namespace MultiCoD_FoV_Changer
 
         private void chkBeep_CheckedChanged(object sender, EventArgs e)
         {
-            doBeep = chkBeep.Checked;
-            SaveSettings();
+            //SaveSettings();
         }
 
         private void numFoV_Leave(object sender, EventArgs e)
+        {
+            UpdateNumBox();
+        }
+
+        private void numFoVScale_Leave(object sender, EventArgs e)
+        {
+            UpdateNumBox();
+        }
+
+        private void numFPS_Leave(object sender, EventArgs e)
         {
             UpdateNumBox();
         }
@@ -943,9 +1131,27 @@ namespace MultiCoD_FoV_Changer
             }
         }
 
+        private void numFoVScale_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == (char)Keys.Return)
+            {
+                UpdateNumBox();
+                this.ActiveControl = null;
+            }
+        }
+
+        private void numFPS_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == (char)Keys.Return)
+            {
+                UpdateNumBox();
+                this.ActiveControl = null;
+            }
+        }
+
         private void MainForm_Deactivate(object sender, EventArgs e)
         {
-            UpdateNumBox();
+            //UpdateNumBox();
             this.ActiveControl = null;
         }
 
@@ -953,24 +1159,35 @@ namespace MultiCoD_FoV_Changer
         {
             if (this.ActiveControl != null)
             {
-                UpdateNumBox();
+                //UpdateNumBox();
                 this.ActiveControl = null;
             }
         }
 
         private void numFoV_ValueChanged(object sender, EventArgs e)
         {
-            UpdateNumBox();
+            if (this.ContainsFocus)
+                UpdateNumBox();
+        }
+
+        private void numFoVScale_ValueChanged(object sender, EventArgs e)
+        {
+            if (this.ContainsFocus)
+                UpdateNumBox();
         }
 
         private void numFPS_ValueChanged(object sender, EventArgs e)
         {
-            UpdateNumBoxFPS();
+            if (this.ContainsFocus)
+                UpdateNumBox();
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (proc != null && isRunning()) progStop();
+            if (CheckGameRunning())
+            {
+                progStop();
+            }
         }
 
         private void btnAbout_Click(object sender, EventArgs e)
@@ -1016,7 +1233,7 @@ namespace MultiCoD_FoV_Changer
                 }
                 else
                 {
-                    if (updateNotify && updateAvailable)
+                    if (chkUpdate.Checked && updateAvailable)
                     {
                         lblUpdateAvail.Visible = true;
                     }
@@ -1033,7 +1250,6 @@ namespace MultiCoD_FoV_Changer
 
         private void chkUpdate_CheckedChanged(object sender, EventArgs e)
         {
-            updateNotify = chkUpdate.Checked;
             UpdateCheck();
         }
 
@@ -1055,10 +1271,17 @@ namespace MultiCoD_FoV_Changer
 
         private void chkHotkeys_CheckedChanged(object sender, EventArgs e)
         {
-            hotKeys = chkHotkeys.Checked;
+            UpdateKeyListener();
             TimerReset();
+            SetFoVEnabled(true);
             currentKey = Keys.None;
-            SaveSettings();
+            //SaveSettings();
+        }
+
+        private void cbKeyOffOnMode_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            SetFoVEnabled(true);
+            //SaveSettings();
         }
 
         private void btnKeyZoomOut_Click(object sender, EventArgs e)
@@ -1074,6 +1297,11 @@ namespace MultiCoD_FoV_Changer
         private void btnKeyReset_Click(object sender, EventArgs e)
         {
             ChgKey(2, "Reset to default", btnKeyReset);
+        }
+
+        private void btnKeyOffOn_Click(object sender, EventArgs e)
+        {
+            ChgKey(3, "Off / On", btnKeyOffOn);
         }
 
         #endregion

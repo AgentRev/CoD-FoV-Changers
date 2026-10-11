@@ -19,11 +19,7 @@ namespace MultiCoD_FoV_Changer
             {
                 components.Dispose();
             }
-            if (ptrHook != IntPtr.Zero)
-            {
-                UnhookWindowsHookEx(ptrHook);
-                ptrHook = IntPtr.Zero;
-            }
+            inputListener.Dispose();
             base.Dispose(disposing);
         }
 

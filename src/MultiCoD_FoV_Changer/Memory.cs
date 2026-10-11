@@ -1,9 +1,10 @@
-//#define DEBUGMESSAGES
+﻿//#define DEBUGMESSAGES
 
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -16,23 +17,44 @@ namespace MultiCoD_FoV_Changer
     {
         #region Variables
 
+        public static int pid;
         public static dword_ptr baseAddr;
+        public static Dictionary<string, dword_ptr> dvarAddresses = new Dictionary<string, dword_ptr>();
+
         static IntPtr hProc;
         static int dvarPtrSize;
         static dword_ptr dvarValueOffset;
         static bool isGame64;
         static bool readFailureShown = false;
 
-        public static Dictionary<string, dword_ptr> dvarAddresses = new Dictionary<string, dword_ptr>();
-
         #endregion
 
         #region Methods
+
+        // Shadows System.Windows.Forms.MessageBox so dialogs shown from the background scan run on the UI thread
+        private static class MessageBox
+        {
+            public static DialogResult Show(string text, string caption, MessageBoxButtons buttons = MessageBoxButtons.OK, MessageBoxIcon icon = MessageBoxIcon.None)
+            {
+                Form owner = Application.OpenForms.Count > 0 ? Application.OpenForms[0] : null;
+
+                if (owner != null && !owner.IsDisposed && owner.InvokeRequired)
+                {
+                    return (DialogResult)owner.Invoke(new Func<DialogResult>(() =>
+                        System.Windows.Forms.MessageBox.Show(owner, text, caption, buttons, icon)));
+                }
+
+                return System.Windows.Forms.MessageBox.Show(owner, text, caption, buttons, icon);
+            }
+        }
 
         public static void Init(Process proc)
         {
             if (hProc != IntPtr.Zero)
             {
+                if (pid == proc.Id)
+                    return;
+
                 PInvokeAPI.CloseHandle(hProc);
             }
 
@@ -66,6 +88,7 @@ namespace MultiCoD_FoV_Changer
 
             isGame64 = PInvokeAPI.IsTargetProcess64Bit(hProc);
             dvarPtrSize = isGame64 ? sizeof(long) : sizeof(int);
+            pid = proc.Id;
         }
 
         public static void Reset()
@@ -76,9 +99,11 @@ namespace MultiCoD_FoV_Changer
             }
 
             hProc = IntPtr.Zero;
+            pid = 0;
             dvarValueOffset = 0;
             dvarAddresses.Clear();
         }
+
         private static int ReadBytes(dword_ptr addr, ref byte[] buffer)
         {
             return PInvokeAPI.ReadMemory(hProc, addr, buffer, buffer.Length);
@@ -147,7 +172,7 @@ namespace MultiCoD_FoV_Changer
             var nameAddressesArr = new dword_ptr[dvarCount];
             dword_ptr nameAddressesMax = baseAddr;
 
-            const int chunkSize = 0x1000000; // 16 MB
+            const int chunkSize = 16 * 0x100000; // 16 MB
             const int chunkMargin = 0x100; // ensures dvar names and structs arent cut in half
             const int stepSize = chunkSize - chunkMargin;
             var buffer = new byte[chunkSize];
@@ -155,7 +180,7 @@ namespace MultiCoD_FoV_Changer
 
             // Search game memory to find addresses of dvar name strings
 
-            dword_ptr maxAddr = baseAddr + 0x2000000; // limits name scan range to 32 MB
+            dword_ptr maxAddr = baseAddr + 32 * 0x100000; // limits name scan range to 32 MB
             int bytesRead, iBuf, iBufMax, iPending, iName;
             bool match;
 
@@ -226,7 +251,7 @@ namespace MultiCoD_FoV_Changer
                 fixed (byte* pBuffer = buffer)
                 {
                     dword_ptr ptrVal, structAddr;
-                    maxAddr = baseAddr + 0x10000000; // first 256MB RAM
+                    maxAddr = baseAddr + 256 * 0x100000; // first 256 MB RAM
                     totalBytesRead = 0;
 
                     for (dword_ptr currAddr = nameAddressesArr.Max(); currAddr < maxAddr && pendingStructCount > 0; currAddr += stepSize)
@@ -312,6 +337,50 @@ namespace MultiCoD_FoV_Changer
             MessageBox.Show($"Adjusted addresses with offset 0x{dvarValueOffset:X}:\n\n{finalAdjustedResults}", "Debug - Step 5: Adjusted Struct Addresses");
 #endif
             return true;
+        }
+
+        /// <summary>
+        /// Gets the Working Set (Physical RAM allocation) of a process; supports Linux (Wine / Mono).
+        /// </summary>
+        public static long GetWorkingSet64(Process proc)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                try
+                {
+                    string statusPath = $"/proc/{proc.Id}/status";
+
+                    if (File.Exists(statusPath))
+                    {
+                        foreach (string line in File.ReadLines(statusPath))
+                        {
+                            if (!line.StartsWith("VmRSS:", StringComparison.Ordinal))
+                                continue;
+
+                            // Format: "VmRSS:     123456 kB"
+                            string[] parts = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+
+                            if (parts.Length >= 2 && long.TryParse(parts[1], out long vmRSS))
+                            {
+                                return vmRSS * 1024; // kB to bytes
+                            }
+
+                            break; // Found the line but couldn't parse it
+                        }
+                    }
+                }
+                catch { }
+            }
+
+            try
+            {
+                proc.Refresh();
+                return proc.WorkingSet64;
+            }
+            catch
+            {
+                return 0;
+            }
         }
 
         // Type-specific wrappers

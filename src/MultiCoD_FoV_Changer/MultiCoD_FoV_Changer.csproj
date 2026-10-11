@@ -132,6 +132,7 @@
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Memory.cs" />
+    <Compile Include="RawInputListener.cs" />
     <Compile Include="Program.cs">
       <SubType>Code</SubType>
     </Compile>

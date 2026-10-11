@@ -20,23 +20,7 @@ namespace MultiCoD_FoV_Changer
             get { return _pressedKeyName; }
         }
 
-        [DllImport("user32.dll", SetLastError = true)]
-        static extern int MapVirtualKey(uint uCode, uint uMapType);
-
-        private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern IntPtr SetWindowsHookEx(int id, LowLevelKeyboardProc callback, IntPtr hMod, uint dwThreadId);
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern bool UnhookWindowsHookEx(IntPtr hook);
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern IntPtr CallNextHookEx(IntPtr hook, int nCode, IntPtr wp, IntPtr lp);
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern IntPtr GetModuleHandle(string name);
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        private static extern short GetAsyncKeyState(Keys key);
-        private IntPtr ptrHook;
-        private KeyHook theKey;
-        private LowLevelKeyboardProc objKeyboardProcess;
+        private readonly RawInputListener inputListener = new RawInputListener();
 
         public ChangeKey(string hotkey)
         {
@@ -45,11 +29,10 @@ namespace MultiCoD_FoV_Changer
 
             try
             {
-                // GetModuleHandle(null) gets the executable module handle directly 
-                // without invoking Process.GetCurrentProcess().MainModule
-                IntPtr hInstance = GetModuleHandle(null);
-                objKeyboardProcess = new LowLevelKeyboardProc(captureKey);
-                ptrHook = SetWindowsHookEx(13, objKeyboardProcess, hInstance, 0);
+                inputListener.KeyboardAction += OnKeyboardEvent;
+                inputListener.MouseAction += OnMouseEvent;
+                inputListener.Start();
+                FormClosed += (s, e) => inputListener.Dispose();
             }
             catch (Exception ex)
             {
@@ -60,27 +43,33 @@ namespace MultiCoD_FoV_Changer
             }
         }
 
-        private IntPtr captureKey(int nCode, IntPtr wp, IntPtr lp)
+        private void OnKeyboardEvent(Keys key, bool down)
         {
-            if (nCode >= 0)
-            {
-                theKey = (KeyHook)Marshal.PtrToStructure(lp, typeof(KeyHook));
-                // Keyboard Hook Time /////////////////////////////////////////////////////////////////////////////////////////
+            if (down && key != Keys.Return)
+                SetPressedKey(key);
+        }
 
-                if (theKey.flags < 128 && (int)theKey.Key != (int)Keys.Return)
-                {
-                    _pressedKey = theKey.Key;
+        private void OnMouseEvent(Keys key, bool down)
+        {
+            if (!down)
+                return;
 
-                    _pressedKeyName = MainForm.VirtualKeyName(_pressedKey);
+            var pt = Cursor.Position;
 
-                    lblKeyName.Text = _pressedKeyName; //+ " " + _pressedKey.ToString(); //+ " " + nonVirtualKey; //MainForm.KeyName(theKey.Key)
-                    btnAccept.Enabled = true;
-                    this.ActiveControl = btnAccept;
-                }
+            if (btnAccept.RectangleToScreen(btnAccept.ClientRectangle).Contains(pt) ||
+                btnCancel.RectangleToScreen(btnCancel.ClientRectangle).Contains(pt))
+                return;
 
-                ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            }
-            return CallNextHookEx(ptrHook, nCode, wp, lp);
+            SetPressedKey(key);
+        }
+
+        private void SetPressedKey(Keys key)
+        {
+            _pressedKey = key;
+            _pressedKeyName = MainForm.VirtualKeyName(key);
+            lblKeyName.Text = _pressedKeyName;
+            btnAccept.Enabled = true;
+            this.ActiveControl = btnAccept;
         }
 
         private void btnCancel_Enter(object sender, EventArgs e)
