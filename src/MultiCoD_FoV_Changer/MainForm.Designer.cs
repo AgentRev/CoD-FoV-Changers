@@ -32,7 +32,6 @@ namespace MultiCoD_FoV_Changer
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.TimerHoldKey = new System.Windows.Forms.Timer(this.components);
             this.TimerUpdate = new System.Windows.Forms.Timer(this.components);
             this.lblFoV = new System.Windows.Forms.Label();
@@ -514,7 +513,7 @@ namespace MultiCoD_FoV_Changer
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.lblVersion);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Icon = global::MultiCoD_FoV_Changer.Properties.Resources.multicodfovico;
             this.MaximizeBox = false;
             this.Name = "MainForm";
             this.Text = "MultiCoD FoV Changer";

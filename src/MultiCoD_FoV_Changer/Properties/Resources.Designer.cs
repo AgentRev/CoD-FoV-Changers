@@ -63,9 +63,9 @@ namespace MultiCoD_FoV_Changer.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
-        internal static System.Drawing.Icon ghostfovico {
+        internal static System.Drawing.Icon multicodfovico {
             get {
-                object obj = ResourceManager.GetObject("ghostfovico", resourceCulture);
+                object obj = ResourceManager.GetObject("multicodfovico", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
             }
         }
