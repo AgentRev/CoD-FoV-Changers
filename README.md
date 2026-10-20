@@ -1,11 +1,10 @@
-# MutliCoD FoV Changer
+# MultiCoD FoV Changer
 
 ### [DOWNLOAD HERE](https://github.com/AgentRev/CoD-FoV-Changers/releases)
 
 Field of View tool and FPS unlocker for CoD MW1 '07, WaW, MW2 '09, BO1, MW3 '11, BO2, Ghosts, AW.
 
 <img width="300" height="467" alt="image" src="https://github.com/user-attachments/assets/173c8430-ae29-41b5-aa41-4af214c46685" /><br>
-
 
 (Also compatible with Linux via [protonhax](https://github.com/jcnils/protonhax) and [Wine Mono](https://github.com/wine-mono/wine-mono))
 
