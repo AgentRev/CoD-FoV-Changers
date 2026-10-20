@@ -247,6 +247,9 @@ namespace MultiCoD_FoV_Changer
             InitFovChanger();
             saveSettings = true;
 
+            Shown += (s, e) =>
+                this.ActiveControl = null;
+
             FormClosed += (s, e) =>
                 SaveSettings();
 
@@ -428,6 +431,7 @@ namespace MultiCoD_FoV_Changer
             settingsFile = Path.Combine(settingsPath, Constants.c_settingsFileName);
 
             fFoV = c_FoV;
+            maxFPS = Convert.ToInt32(numFPS.Value);
             catchKeys = (Keys[])c_catchKeys.Clone();
 
             this.cbKeyOffOnMode.SelectedIndex = 0; // "Toggle"
