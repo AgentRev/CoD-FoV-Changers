@@ -22,7 +22,7 @@ namespace MultiCoD_FoV_Changer
     {
         #region constants
 
-        public const string c_toolVer = "4.00.17.5";
+        public const string c_toolVer = "5.0.0.0";
 
         public const float c_FoV = 90f;
         public const float c_FoV_vanilla = 65f;
