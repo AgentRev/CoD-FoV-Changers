@@ -32,7 +32,9 @@ namespace MultiCoD_FoV_Changer
                 inputListener.KeyboardAction += OnKeyboardEvent;
                 inputListener.MouseAction += OnMouseEvent;
                 inputListener.Start();
-                FormClosed += (s, e) => inputListener.Dispose();
+
+                FormClosed += (s, e) =>
+                    inputListener.Stop();
             }
             catch (Exception ex)
             {

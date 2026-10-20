@@ -19,7 +19,6 @@ namespace MultiCoD_FoV_Changer
             {
                 components.Dispose();
             }
-            inputListener.Dispose();
             base.Dispose(disposing);
         }
 

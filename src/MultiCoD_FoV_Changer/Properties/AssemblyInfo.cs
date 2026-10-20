@@ -2,8 +2,8 @@ using System.Reflection;
 using System.Resources;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("MultiCoD FoV Changer")]
-[assembly: AssemblyDescription("Field of View Changer for various Call of Duty games")]
+//[assembly: AssemblyTitle("MultiCoD FoV Changer")]
+[assembly: AssemblyDescription("Field of View tool and FPS unlocker for various Call of Duty games")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("AgentRev")]
 [assembly: AssemblyProduct("MultiCoD FoV Changer")]
